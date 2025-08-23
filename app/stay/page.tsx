@@ -16,7 +16,7 @@ export default function StayInfo() {
           Our <span className="text-gradient">Waterfront Home</span>
         </h1>
         <p className="text-lg opacity-75 max-w-2xl mx-auto">
-          Everything you need to know about our beautiful coastal retreat for Dad's 80th celebration
+          Everything you need to know about our beautiful coastal retreat for Dad&apos;s 80th celebration
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export default function StayInfo() {
             What to <span className="text-gradient">Expect</span>
           </h2>
           <p className="text-lg opacity-75 max-w-2xl mx-auto">
-            Here's what we know about our coastal home base
+            Here&apos;s what we know about our coastal home base
           </p>
         </div>
         
@@ -176,7 +176,7 @@ export default function StayInfo() {
           More Details Coming Soon
         </h2>
         <p className="text-lg opacity-80 mb-6 max-w-2xl mx-auto">
-          We'll update this page with the complete address, detailed check-in instructions, 
+          We&apos;ll update this page with the complete address, detailed check-in instructions, 
           Wi-Fi passwords, house rules, and any special notes as we get closer to the trip.
         </p>
         <div className="flex flex-wrap gap-4 justify-center">

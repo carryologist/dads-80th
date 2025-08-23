@@ -38,7 +38,7 @@ export default function RootLayout({
         <header className="sticky top-0 z-50 backdrop-blur border-b border-[var(--border-light)] bg-[var(--surface)]/90">
           <nav className="container flex items-center justify-between py-4">
             <Link href="/" className="font-display text-xl font-semibold text-gradient hover:scale-105 transition-transform">
-              Bob's 80th 🎉
+              Bob&apos;s 80th 🎉
             </Link>
             <div className="hidden sm:flex items-center gap-6">
               <Link href="/stay" className="text-sm font-medium hover:text-[var(--brand-primary)] transition-colors">
@@ -75,10 +75,10 @@ export default function RootLayout({
             <div className="grid md:grid-cols-3 gap-8">
               <div>
                 <h3 className="font-display text-lg font-semibold mb-4 text-gradient">
-                  Bob's 80th Celebration
+                  Bob&apos;s 80th Celebration
                 </h3>
                 <p className="text-sm opacity-75 mb-4">
-                  A week-long coastal adventure celebrating eight decades of Dad's amazing life.
+                  A week-long coastal adventure celebrating eight decades of Dad&apos;s amazing life.
                 </p>
                 <div className="badge badge-primary">
                   🏖️ July 5–12, 2026
@@ -121,7 +121,7 @@ export default function RootLayout({
             </div>
             <div className="border-t border-[var(--border-light)] mt-8 pt-8 text-center">
               <p className="text-xs opacity-60">
-                Made with ❤️ for Dad's 80th • Hosted on Vercel
+                Made with ❤️ for Dad&apos;s 80th • Hosted on Vercel
               </p>
             </div>
           </div>

@@ -53,7 +53,7 @@ export default function Home() {
               A week on Buzzards Bay with family, seaside sunsets, and celebrations.
             </p>
             <p className="text-sm sm:text-base opacity-80 text-shadow mb-8">
-              Join us for an unforgettable coastal adventure celebrating eight decades of Dad's amazing life.
+              Join us for an unforgettable coastal adventure celebrating eight decades of Dad&apos;s amazing life.
             </p>
             <Suspense>
               <Countdown />
@@ -100,7 +100,7 @@ export default function Home() {
             <div className="text-3xl mb-4">🌊</div>
             <h3 className="font-display text-xl font-semibold mb-2">Things to Do</h3>
             <p className="text-sm opacity-75 mb-4">
-              Beaches, bike trails, museums, ferries to Martha's Vineyard and Cuttyhunk Island.
+              Beaches, bike trails, museums, ferries to Martha&apos;s Vineyard and Cuttyhunk Island.
             </p>
             <Link href="/things-to-do" className="btn btn-primary w-full">
               Explore Activities →
@@ -158,7 +158,7 @@ export default function Home() {
               </h2>
               <p className="text-lg opacity-80 mb-6 leading-relaxed">
                 Experience waterfront vibes, cozy rooms, and quick access to pristine beaches, 
-                scenic bike paths, and historic lighthouses. We'll share the complete address 
+                scenic bike paths, and historic lighthouses. We&apos;ll share the complete address 
                 and house details in the Stay Info section.
               </p>
               <div className="flex flex-wrap gap-4">
@@ -191,10 +191,10 @@ export default function Home() {
       <section className="container animate-fade-in">
         <div className="text-center py-16">
           <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
-            Ready to Celebrate <span className="text-gradient">Dad's 80th</span>?
+            Ready to Celebrate <span className="text-gradient">Dad&apos;s 80th</span>?
           </h2>
           <p className="text-lg opacity-75 mb-8 max-w-2xl mx-auto">
-            Don't forget to share your travel plans so we can coordinate arrivals and maybe share some rides!
+            Don&apos;t forget to share your travel plans so we can coordinate arrivals and maybe share some rides!
           </p>
           <Link href="/travel-notes" className="btn btn-accent text-lg px-8 py-4 animate-float">
             ✈️ Share Your Travel Plans
