@@ -1,5 +1,30 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
+
+function Countdown() {
+  const event = new Date("2026-07-05T00:00:00-04:00").getTime();
+  const now = Date.now();
+  const diff = Math.max(0, event - now);
+  const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const m = Math.floor((diff / (1000 * 60)) % 60);
+  return (
+    <div className="mt-4 text-sm/6 sm:text-base/7">
+      <span className="badge bg-white/20 text-white">Countdown: {d}d {h}h {m}m</span>
+    </div>
+  );
+}
+
+const vrboImages = [
+  "https://media.vrbo.com/lodging/118000000/117070000/117064100/117064047/6b649ff4.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+  "https://media.vrbo.com/lodging/118000000/117070000/117064100/117064047/dc5a44ce.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+  "https://media.vrbo.com/lodging/118000000/117070000/117064100/117064047/981b217b.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+  "https://media.vrbo.com/lodging/118000000/117070000/117064100/117064047/d62942da.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+  "https://media.vrbo.com/lodging/118000000/117070000/117064100/117064047/w1200h799x0y1-6c743a1d.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+  "https://media.vrbo.com/lodging/118000000/117070000/117064100/117064047/930c971a.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+  "https://media.vrbo.com/lodging/118000000/117070000/117064100/117064047/c39b8b7d.jpg?impolicy=resizecrop&rw=1200&ra=fit",
+];
 
 export default function Home() {
   return (
@@ -21,6 +46,9 @@ export default function Home() {
             <p className="mt-3 text-sm/6 sm:text-base/7 opacity-95">
               A week on Buzzards Bay with family, seaside sunsets, and celebrations.
             </p>
+            <Suspense>
+              <Countdown />
+            </Suspense>
             <div className="mt-6 flex flex-wrap gap-3 justify-center">
               <Link href="/travel-notes" className="rounded bg-[var(--color-brand)] text-white px-5 py-2.5 hover:opacity-90">
                 Share your travel plan
@@ -60,6 +88,21 @@ export default function Home() {
         </div>
       </section>
 
+      {/* VRBO gallery */}
+      <section className="container grid gap-6 section">
+        <div>
+          <h2 className="text-2xl font-medium">A peek at the house</h2>
+          <p className="text-sm opacity-75">A few photos from the listing to get everyone excited.</p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {vrboImages.map((src, i) => (
+            <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden border">
+              <Image src={src} alt={`House photo ${i + 1}`} fill className="object-cover" />
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* VRBO blurb */}
       <section className="container section rounded-xl border bg-white/50 dark:bg-white/5">
         <div className="grid md:grid-cols-[1fr_360px] gap-6 items-center">
@@ -80,10 +123,10 @@ export default function Home() {
           </div>
           <div className="relative w-full h-[220px] sm:h-[260px] rounded-lg overflow-hidden border">
             <Image
-              src="/vercel.svg"
-              alt="Placeholder — swap with listing photo"
+              src={vrboImages[0]}
+              alt="House exterior"
               fill
-              className="object-contain p-6 dark:invert"
+              className="object-cover"
             />
           </div>
         </div>
