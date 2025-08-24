@@ -1,17 +1,5 @@
-import { sql } from "@vercel/postgres";
+import { getActivitySuggestions, ActivitySuggestion } from "../../lib/storage";
 import ActivitySuggestionForm from "../../components/ActivitySuggestionForm";
-
-interface ActivitySuggestion {
-  id: number;
-  name: string;
-  activity_name: string;
-  description: string;
-  location: string | null;
-  website: string | null;
-  category: string;
-  notes: string | null;
-  created_at: string;
-}
 
 const featuredActivities = [
   {
@@ -146,22 +134,9 @@ export default async function ThingsToDo() {
   let userSuggestions: ActivitySuggestion[] = [];
 
   try {
-    await sql`CREATE TABLE IF NOT EXISTS activity_suggestions (
-      id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL,
-      activity_name TEXT NOT NULL,
-      description TEXT NOT NULL,
-      location TEXT,
-      website TEXT,
-      category TEXT NOT NULL,
-      notes TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )`;
-
-    const result = await sql<ActivitySuggestion>`SELECT * FROM activity_suggestions ORDER BY created_at DESC`;
-    userSuggestions = result.rows;
+    userSuggestions = await getActivitySuggestions();
   } catch (_e) {
-    // Ignore errors so the page still renders if DB is not configured yet.
+    // Ignore errors so the page still renders if storage is not available yet.
   }
 
   const getCategoryIcon = (category: string) => {

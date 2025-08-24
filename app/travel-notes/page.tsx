@@ -1,82 +1,35 @@
-import { sql } from "@vercel/postgres";
-import TravelForm from "./travel-form";
+import { getTravelNotes, TravelNote } from "../../lib/storage";
+import TravelPlanForm from "../../components/TravelPlanForm";
 
-export default async function TravelNotesPage() {
-  let rows: Array<{
-    id: number;
-    name: string;
-    origin_city: string;
-    origin_state: string | null;
-    arrival_date: string;
-    arrival_time: string | null;
-    departure_date: string;
-    departure_time: string | null;
-    travel_mode: string | null;
-    notes: string | null;
-    created_at: string;
-  }> = [];
+export default async function TravelNotes() {
+  let travelNotes: TravelNote[] = [];
 
   try {
-    await sql`CREATE TABLE IF NOT EXISTS travelers (
-      id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL,
-      origin_city TEXT NOT NULL,
-      origin_state TEXT,
-      arrival_date DATE NOT NULL,
-      arrival_time TIME,
-      departure_date DATE NOT NULL,
-      departure_time TIME,
-      travel_mode TEXT,
-      notes TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )`;
-
-    const result = await sql<{
-      id: number;
-      name: string;
-      origin_city: string;
-      origin_state: string | null;
-      arrival_date: string;
-      arrival_time: string | null;
-      departure_date: string;
-      departure_time: string | null;
-      travel_mode: string | null;
-      notes: string | null;
-      created_at: string;
-    }>`SELECT id, name, origin_city, origin_state, arrival_date, arrival_time, departure_date, departure_time, travel_mode, notes, created_at
-      FROM travelers
-      ORDER BY arrival_date, name`;
-    rows = result.rows;
+    travelNotes = await getTravelNotes();
   } catch (_e) {
-    // Ignore errors so the page still renders if DB is not configured yet.
+    // Ignore errors so the page still renders if storage is not available yet.
   }
 
-  function fmtDate(d: string) {
-    try {
-      return new Date(d).toLocaleDateString(undefined, { 
-        year: "numeric", 
-        month: "short", 
-        day: "numeric" 
-      });
-    } catch {
-      return d;
-    }
-  }
-  
-  function fmtTime(t: string | null) {
-    if (!t) return "";
-    try {
-      const [h, m] = t.split(":");
-      const d = new Date();
-      d.setHours(parseInt(h, 10), parseInt(m, 10));
-      return d.toLocaleTimeString(undefined, { 
-        hour: "numeric", 
-        minute: "2-digit" 
-      });
-    } catch {
-      return t;
-    }
-  }
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getTravelIcon = (method: string) => {
+    const iconMap: { [key: string]: string } = {
+      "Flying": "✈️",
+      "Driving": "🚗",
+      "Train": "🚂",
+      "Bus": "🚌",
+      "Other": "🧳"
+    };
+    return iconMap[method] || "🧳";
+  };
 
   return (
     <div className="container space-y-16 animate-fade-in">
@@ -84,111 +37,78 @@ export default async function TravelNotesPage() {
       <div className="text-center">
         <div className="badge badge-primary mb-4">✈️ Travel Coordination</div>
         <h1 className="font-display text-4xl sm:text-5xl font-bold mb-4">
-          Share Your <span className="text-gradient">Travel Plans</span>
+          Travel <span className="text-gradient">Plans</span>
         </h1>
         <p className="text-lg opacity-75 max-w-2xl mx-auto">
-          Help everyone coordinate arrivals, departures, and maybe share some rides! 
-          Let us know when you&apos;re coming and going.
+          Help coordinate everyone&apos;s arrival and departure times for Dad&apos;s celebration. 
+          Share your travel details so we can plan activities and meals together!
         </p>
       </div>
 
-      {/* Travel Form Section */}
-      <section className="max-w-2xl mx-auto">
-        <div className="card card-travel p-8">
-          <div className="text-center mb-8">
-            <div className="text-4xl mb-4">🗓️</div>
-            <h2 className="font-display text-2xl font-semibold mb-2">
-              Add Your Travel Details
+      {/* Existing Travel Plans */}
+      {travelNotes.length > 0 && (
+        <section>
+          <div className="text-center mb-12">
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
+              📅 Family <span className="text-gradient">Travel Plans</span>
             </h2>
-            <p className="text-sm opacity-75">
-              Share your plans so we can coordinate and help each other out
+            <p className="text-lg opacity-75 max-w-2xl mx-auto">
+              Here&apos;s who&apos;s coming and when they&apos;ll be there!
             </p>
           </div>
-          <TravelForm />
-        </div>
-      </section>
-
-      {/* Travel Plans List */}
-      <section>
-        <div className="text-center mb-12">
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
-            Family <span className="text-gradient">Travel Plans</span>
-          </h2>
-          <p className="text-lg opacity-75 max-w-2xl mx-auto">
-            See who&apos;s coming when and coordinate your arrivals
-          </p>
-        </div>
-        
-        {rows.length === 0 ? (
-          <div className="card card-travel text-center p-12">
-            <div className="text-6xl mb-4">🧳</div>
-            <h3 className="font-display text-xl font-semibold mb-2">
-              No Travel Plans Yet
-            </h3>
-            <p className="text-sm opacity-75 mb-6">
-              Be the first to share your travel details! Others will follow once they see your plans.
-            </p>
-            <div className="badge badge-primary">
-              👆 Use the form above to get started
-            </div>
-          </div>
-        ) : (
-          <div className="grid gap-6 max-w-4xl mx-auto">
-            {rows.map((traveler, index) => (
+          
+          <div className="grid gap-6">
+            {travelNotes.map((note, index) => (
               <div 
-                key={traveler.id} 
-                className="card hover:scale-[1.02] transition-transform duration-300"
+                key={note.id}
+                className="card border-2 border-[var(--brand-accent)]/30 bg-gradient-to-r from-[var(--brand-accent)]/5 to-transparent hover:scale-[1.02] transition-transform duration-300"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-start gap-4">
                   <div className="text-3xl">
-                    {index % 4 === 0 ? "👨‍👩‍👧‍👦" : index % 4 === 1 ? "✈️" : index % 4 === 2 ? "🚗" : "🏖️"}
+                    {getTravelIcon(note.travel_method)}
                   </div>
                   <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h3 className="font-display text-lg font-semibold">
-                        {traveler.name}
+                    <div className="flex flex-wrap items-start gap-3 mb-3">
+                      <h3 className="font-display text-xl font-semibold flex-1">
+                        {note.name}
                       </h3>
-                      <div className="badge badge-primary text-xs">
-                        From {traveler.origin_city}
-                        {traveler.origin_state ? `, ${traveler.origin_state}` : ""}
+                      <div className="badge badge-accent text-xs">
+                        {note.travel_method}
                       </div>
                     </div>
                     
-                    <div className="grid sm:grid-cols-2 gap-3 mb-3">
+                    <div className="grid sm:grid-cols-2 gap-4 mb-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">🛬</span>
+                        <span className="text-lg">📅</span>
                         <div>
-                          <p className="text-sm font-medium">
-                            Arriving {fmtDate(traveler.arrival_date)}
-                          </p>
-                          {traveler.arrival_time && (
-                            <p className="text-xs opacity-75">
-                              {fmtTime(traveler.arrival_time)}
-                            </p>
-                          )}
+                          <p className="text-sm font-medium">Arriving</p>
+                          <p className="text-sm opacity-75">{formatDate(note.arrival_date)}</p>
                         </div>
                       </div>
-                      
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">🛫</span>
+                        <span className="text-lg">📅</span>
                         <div>
-                          <p className="text-sm font-medium">
-                            Departing {fmtDate(traveler.departure_date)}
-                          </p>
-                          {traveler.departure_time && (
-                            <p className="text-xs opacity-75">
-                              {fmtTime(traveler.departure_time)}
-                            </p>
-                          )}
+                          <p className="text-sm font-medium">Departing</p>
+                          <p className="text-sm opacity-75">{formatDate(note.departure_date)}</p>
                         </div>
                       </div>
                     </div>
                     
-                    {traveler.notes && (
+                    {note.accommodation && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-lg">🏨</span>
+                        <div>
+                          <p className="text-sm font-medium">Staying at</p>
+                          <p className="text-sm opacity-75">{note.accommodation}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {note.notes && (
                       <div className="mt-3 p-3 bg-[var(--surface-secondary)] rounded-lg">
-                        <p className="text-sm opacity-80 whitespace-pre-wrap">
-                          💬 {traveler.notes}
+                        <p className="text-sm opacity-80">
+                          💭 {note.notes}
                         </p>
                       </div>
                     )}
@@ -197,26 +117,42 @@ export default async function TravelNotesPage() {
               </div>
             ))}
           </div>
-        )}
+        </section>
+      )}
+
+      {/* Travel Plan Form */}
+      <section className="max-w-2xl mx-auto">
+        <div className="card card-travel p-8">
+          <div className="text-center mb-8">
+            <div className="text-4xl mb-4">🗓️</div>
+            <h2 className="font-display text-2xl font-semibold mb-2">
+              Share Your Travel Plans
+            </h2>
+            <p className="text-sm opacity-75">
+              Let everyone know when you&apos;re arriving and departing so we can coordinate activities!
+            </p>
+          </div>
+          <TravelPlanForm />
+        </div>
       </section>
 
       {/* Call to Action */}
       <section className="text-center">
         <div className="card card-travel p-8">
-          <div className="text-4xl mb-4">🤝</div>
+          <div className="text-4xl mb-4">🎉</div>
           <h2 className="font-display text-2xl font-semibold mb-4">
-            Coordinate & Connect
+            Ready to Celebrate?
           </h2>
           <p className="text-lg opacity-80 mb-6 max-w-2xl mx-auto">
-            Once everyone shares their plans, we can coordinate rides from airports, 
-            plan group activities, and make sure no one arrives to an empty house!
+            With everyone&apos;s travel plans coordinated, we can make sure Dad&apos;s 80th birthday 
+            celebration is perfectly timed for maximum family fun!
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
+            <a href="/things-to-do" className="btn btn-primary">
+              🌊 Explore Activities
+            </a>
             <a href="/stay" className="btn btn-secondary">
               🏡 View House Details
-            </a>
-            <a href="/things-to-do" className="btn btn-secondary">
-              🌊 Explore Activities
             </a>
           </div>
         </div>
