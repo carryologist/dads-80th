@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Suspense } from "react";
+import PhotoCarousel from "../components/PhotoCarousel";
 
 function Countdown() {
   const event = new Date("2026-07-05T00:00:00-04:00").getTime();
@@ -59,14 +60,14 @@ export default function Home() {
               <Countdown />
             </Suspense>
             <div className="mt-8 flex flex-wrap gap-4 justify-center">
-              <Link href="/travel-notes" className="btn btn-hero-primary animate-float">
+              <Link href="/travel-notes" className="btn btn-hero-primary animate-float min-w-[240px]">
                 ✈️ Share Your Travel Plan
               </Link>
               <a
                 href="https://www.vrbo.com/4622953?uni_link=5197121"
                 target="_blank"
                 rel="noreferrer"
-                className="btn btn-hero-secondary"
+                className="btn btn-hero-secondary min-w-[240px]"
               >
                 🏠 View the House on VRBO
               </a>
@@ -120,7 +121,7 @@ export default function Home() {
       </section>
 
       {/* House Gallery */}
-      <section className="container animate-fade-in">
+      <section className="container animate-fade-in mt-24">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
             A Peek at Our <span className="text-gradient">Coastal Haven</span>
@@ -129,22 +130,7 @@ export default function Home() {
             Get excited about our beautiful waterfront home with these stunning photos from the listing
           </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {vrboImages.map((src, i) => (
-            <div 
-              key={i} 
-              className="relative aspect-[4/3] image-rounded hover:scale-105 transition-transform duration-300 cursor-pointer"
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
-              <Image 
-                src={src} 
-                alt={`House photo ${i + 1}`} 
-                fill 
-                className="object-cover" 
-              />
-            </div>
-          ))}
-        </div>
+        <PhotoCarousel images={vrboImages} />
       </section>
 
       {/* Featured House Section */}
