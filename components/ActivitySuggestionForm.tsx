@@ -11,6 +11,38 @@ function clientDebugLog(step: string, data?: unknown) {
   }
 }
 
+// URL formatting helper function
+function formatUrl(input: string): string {
+  if (!input || input.trim() === '') {
+    return '';
+  }
+  
+  const url = input.trim();
+  
+  // If it already has a protocol, return as-is
+  if (url.match(/^https?:\/\//i)) {
+    return url;
+  }
+  
+  // If it starts with www., add https://
+  if (url.match(/^www\./i)) {
+    return `https://${url}`;
+  }
+  
+  // If it looks like a domain (contains a dot and no spaces), add https://www.
+  if (url.includes('.') && !url.includes(' ') && !url.includes('/')) {
+    return `https://www.${url}`;
+  }
+  
+  // If it starts with a domain but has a path, add https://
+  if (url.includes('.') && !url.includes(' ')) {
+    return `https://${url}`;
+  }
+  
+  // Otherwise, return as-is (might be invalid, but let server validation handle it)
+  return url;
+}
+
 export default function ActivitySuggestionForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -30,6 +62,17 @@ export default function ActivitySuggestionForm() {
     
     try {
       const formData = new FormData(e.currentTarget)
+      
+      // Format the website URL if provided
+      const websiteValue = formData.get('website');
+      if (websiteValue && typeof websiteValue === 'string') {
+        const formattedUrl = formatUrl(websiteValue);
+        formData.set('website', formattedUrl);
+        clientDebugLog('URL formatting applied', {
+          original: websiteValue,
+          formatted: formattedUrl
+        });
+      }
       
       // Log all form data
       const formEntries = Array.from(formData.entries());

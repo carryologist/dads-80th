@@ -193,7 +193,13 @@ export default function ThingsToDoClient({
     try {
       const form = new FormData()
       Object.entries(formData).forEach(([key, value]) => {
-        form.append(key, value)
+        // Format website URL if it's the website field
+        if (key === 'website' && value) {
+          const formattedUrl = formatUrl(value)
+          form.append(key, formattedUrl)
+        } else {
+          form.append(key, value)
+        }
       })
       
       const response = await fetch(`/api/activity-suggestions?id=${editingActivity.id}`, {
@@ -379,4 +385,36 @@ export default function ThingsToDoClient({
       />
     </div>
   )
+}
+
+// URL formatting helper function
+function formatUrl(input: string): string {
+  if (!input || input.trim() === '') {
+    return '';
+  }
+  
+  const url = input.trim();
+  
+  // If it already has a protocol, return as-is
+  if (url.match(/^https?:\/\//i)) {
+    return url;
+  }
+  
+  // If it starts with www., add https://
+  if (url.match(/^www\./i)) {
+    return `https://${url}`;
+  }
+  
+  // If it looks like a domain (contains a dot and no spaces), add https://www.
+  if (url.includes('.') && !url.includes(' ') && !url.includes('/')) {
+    return `https://www.${url}`;
+  }
+  
+  // If it starts with a domain but has a path, add https://
+  if (url.includes('.') && !url.includes(' ')) {
+    return `https://${url}`;
+  }
+  
+  // Otherwise, return as-is (might be invalid, but let server validation handle it)
+  return url;
 }
