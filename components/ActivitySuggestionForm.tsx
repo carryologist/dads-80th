@@ -1,188 +1,292 @@
-"use client";
-import { useState } from "react";
+'use client'
 
-const categories = [
-  "Outdoors & Nature",
-  "Museums & History", 
-  "Food & Drink",
-  "Entertainment",
-  "Shopping",
-  "Day Trips",
-  "Family-Friendly",
-  "Other"
-];
+import { useState } from 'react'
+
+// Client-side debug logging
+function clientDebugLog(step: string, data?: unknown) {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] 🟦 CLIENT-FORM: ${step}`);
+  if (data) {
+    console.log(`[${timestamp}] 📊 CLIENT-DATA:`, data);
+  }
+}
 
 export default function ActivitySuggestionForm() {
-  const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [submitMessage, setSubmitMessage] = useState('')
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown> | null>(null)
 
-  async function onSubmit(formData: FormData) {
-    setSubmitting(true);
-    setStatus(null);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    
+    const submissionId = Math.random().toString(36).substring(7);
+    clientDebugLog(`🚀 FORM SUBMISSION STARTED [${submissionId}]`);
+    
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
+    setSubmitMessage('')
+    setDebugInfo(null)
     
     try {
-      const res = await fetch("/api/activity-suggestions", {
-        method: "POST",
+      const formData = new FormData(e.currentTarget)
+      
+      // Log all form data
+      const formEntries = Array.from(formData.entries());
+      clientDebugLog('Form data being submitted', formEntries);
+      
+      // Validate required fields client-side
+      const requiredFields = ['name', 'activity_name', 'description', 'category'];
+      const validation: Record<string, { value: FormDataEntryValue | null; valid: boolean }> = {};
+      let hasErrors = false;
+      
+      for (const field of requiredFields) {
+        const value = formData.get(field);
+        validation[field] = {
+          value: value,
+          valid: !!value && String(value).trim().length > 0
+        };
+        if (!validation[field].valid) hasErrors = true;
+      }
+      
+      clientDebugLog('Client-side validation', { validation, hasErrors });
+      
+      if (hasErrors) {
+        clientDebugLog('❌ Client-side validation failed');
+        setSubmitStatus('error');
+        setSubmitMessage('Please fill in all required fields.');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      clientDebugLog('✅ Client-side validation passed, making API request');
+      
+      const startTime = Date.now();
+      const response = await fetch('/api/activity-suggestions', {
+        method: 'POST',
         body: formData,
+      })
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
+      clientDebugLog(`API request completed in ${duration}ms`, {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
       });
       
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('API Error:', errorData);
-        setStatus(`Error: ${errorData.error || 'Something went wrong. Please try again.'}`);  
+      let responseData;
+      try {
+        responseData = await response.json();
+        clientDebugLog('API response data', responseData);
+      } catch (parseError) {
+        clientDebugLog('❌ Failed to parse JSON response', { parseError: String(parseError) });
+        throw new Error('Invalid JSON response from server');
+      }
+      
+      setDebugInfo({
+        submissionId,
+        requestId: responseData.requestId,
+        duration,
+        status: response.status,
+        responseData
+      });
+      
+      if (response.ok && responseData.ok) {
+        clientDebugLog('✅ Form submission successful');
+        setSubmitStatus('success')
+        setSubmitMessage(responseData.message || 'Activity suggestion submitted successfully!')
+        
+        // Reset form
+        e.currentTarget.reset()
+        
+        // Log success details
+        clientDebugLog('Success details', {
+          storage: responseData.storage,
+          id: responseData.id,
+          totalRecords: responseData.totalRecords
+        });
+        
       } else {
-        setStatus("Thanks! Your activity suggestion has been added.");
-        (document.getElementById("activity-suggestion-form") as HTMLFormElement)?.reset();
+        clientDebugLog('❌ Form submission failed', {
+          status: response.status,
+          responseData
+        });
+        setSubmitStatus('error')
+        setSubmitMessage(responseData.message || responseData.error || 'Failed to submit activity suggestion')
       }
     } catch (error) {
-      console.error('Network Error:', error);
-      setStatus("Network error. Please check your connection and try again.");
+      clientDebugLog('❌ Form submission error', {
+        error: String(error),
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+      
+      setSubmitStatus('error')
+      setSubmitMessage('Network error: ' + String(error))
+      setDebugInfo({ error: String(error), submissionId });
+    } finally {
+      setIsSubmitting(false)
+      clientDebugLog(`🏁 FORM SUBMISSION COMPLETED [${submissionId}]`);
     }
-    
-    setSubmitting(false);
   }
 
   return (
-    <form id="activity-suggestion-form" action={onSubmit} className="space-y-6">
-      {/* Your Name */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="name">
-          👤 Your Name
-        </label>
-        <input 
-          id="name" 
-          name="name" 
-          required 
-          placeholder="Who's making this great suggestion?"
-          className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all duration-200" 
-        />
-      </div>
-
-      {/* Activity Name */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="activity_name">
-          🎯 Activity Name
-        </label>
-        <input 
-          id="activity_name" 
-          name="activity_name" 
-          required 
-          placeholder="e.g., Sunset Kayaking, Local Art Gallery, etc."
-          className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all duration-200" 
-        />
-      </div>
-
-      {/* Category */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="category">
-          📂 Category
-        </label>
-        <select 
-          id="category" 
-          name="category" 
-          required 
-          className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all duration-200"
+    <div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium mb-2">
+              Your Name *
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              className="input w-full"
+              placeholder="Enter your name"
+            />
+          </div>
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium mb-2">
+              Category *
+            </label>
+            <select
+              id="category"
+              name="category"
+              required
+              className="input w-full"
+            >
+              <option value="">Select a category</option>
+              <option value="Outdoors & Nature">Outdoors & Nature</option>
+              <option value="Museums & History">Museums & History</option>
+              <option value="Food & Drink">Food & Drink</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Day Trips">Day Trips</option>
+              <option value="Family-Friendly">Family-Friendly</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        
+        <div>
+          <label htmlFor="activity_name" className="block text-sm font-medium mb-2">
+            Activity Name *
+          </label>
+          <input
+            type="text"
+            id="activity_name"
+            name="activity_name"
+            required
+            className="input w-full"
+            placeholder="What's the name of this activity or place?"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium mb-2">
+            Description *
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            required
+            rows={3}
+            className="input w-full resize-none"
+            placeholder="Tell us about this activity - what makes it special?"
+          />
+        </div>
+        
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="location" className="block text-sm font-medium mb-2">
+              Location
+            </label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              className="input w-full"
+              placeholder="City, State or specific address"
+            />
+          </div>
+          <div>
+            <label htmlFor="website" className="block text-sm font-medium mb-2">
+              Website
+            </label>
+            <input
+              type="url"
+              id="website"
+              name="website"
+              className="input w-full"
+              placeholder="https://example.com"
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label htmlFor="notes" className="block text-sm font-medium mb-2">
+            Additional Notes
+          </label>
+          <textarea
+            id="notes"
+            name="notes"
+            rows={2}
+            className="input w-full resize-none"
+            placeholder="Any special tips, best times to visit, or other helpful info?"
+          />
+        </div>
+        
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="btn btn-primary w-full"
         >
-          <option value="">Select a category...</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Description */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="description">
-          📝 Description
-        </label>
-        <textarea 
-          id="description" 
-          name="description" 
-          required
-          rows={3}
-          placeholder="Tell us what makes this activity special and why the family should check it out!"
-          className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all duration-200 resize-none" 
-        />
-      </div>
-
-      {/* Location */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="location">
-          📍 Location <span className="text-xs opacity-60">(optional)</span>
-        </label>
-        <input 
-          id="location" 
-          name="location" 
-          placeholder="Address or general area"
-          className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all duration-200" 
-        />
-      </div>
-
-      {/* Website */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="website">
-          🔗 Website <span className="text-xs opacity-60">(optional)</span>
-        </label>
-        <input 
-          id="website" 
-          name="website" 
-          type="url"
-          placeholder="https://example.com"
-          className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all duration-200" 
-        />
-      </div>
-
-      {/* Notes */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium" htmlFor="notes">
-          💭 Additional Notes <span className="text-xs opacity-60">(optional)</span>
-        </label>
-        <textarea 
-          id="notes" 
-          name="notes" 
-          rows={2}
-          placeholder="Any tips, best times to visit, or other helpful info?"
-          className="w-full px-4 py-3 border border-[var(--border)] rounded-lg bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all duration-200 resize-none" 
-        />
-      </div>
-
-      {/* Submit Button */}
-      <div className="pt-4">
-        <button 
-          disabled={submitting} 
-          className="btn btn-primary w-full text-base py-4 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {submitting ? (
+          {isSubmitting ? (
             <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               Submitting...
             </>
           ) : (
-            <>
-              ✨ Share My Activity Suggestion
-            </>
+            'Share Activity Suggestion'
           )}
         </button>
-      </div>
-
-      {/* Status Message */}
-      {status && (
-        <div className={`p-4 rounded-lg text-sm ${
-          status.includes("Thanks") 
-            ? "bg-[var(--brand-sage)]/10 text-[var(--brand-sage)] border border-[var(--brand-sage)]/20" 
-            : "bg-[var(--brand-coral)]/10 text-[var(--brand-coral)] border border-[var(--brand-coral)]/20"
-        }`}>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">
-              {status.includes("Thanks") ? "✅" : "⚠️"}
-            </span>
-            <p>{status}</p>
+      </form>
+      
+      {/* Status Messages */}
+      {submitStatus === 'success' && (
+        <div className="mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+          <div className="flex items-center">
+            <span className="text-lg mr-2">✅</span>
+            <span>{submitMessage}</span>
           </div>
         </div>
       )}
-    </form>
-  );
+      
+      {submitStatus === 'error' && (
+        <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <div className="flex items-center">
+            <span className="text-lg mr-2">❌</span>
+            <span>{submitMessage}</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Debug Information (only show in development or when there's an issue) */}
+      {debugInfo && (process.env.NODE_ENV === 'development' || submitStatus === 'error') && (
+        <div className="mt-4 p-4 bg-gray-100 border border-gray-300 text-gray-700 rounded-lg text-xs">
+          <details>
+            <summary className="cursor-pointer font-medium mb-2">
+              🔍 Debug Information (Click to expand)
+            </summary>
+            <pre className="whitespace-pre-wrap overflow-auto">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </details>
+        </div>
+      )}
+    </div>
+  )
 }
