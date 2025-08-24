@@ -59,14 +59,14 @@ export default function Home() {
               <Countdown />
             </Suspense>
             <div className="mt-8 flex flex-wrap gap-4 justify-center">
-              <Link href="/travel-notes" className="btn btn-accent animate-float">
+              <Link href="/travel-notes" className="btn btn-hero-primary animate-float">
                 ✈️ Share Your Travel Plan
               </Link>
               <a
                 href="https://www.vrbo.com/4622953?uni_link=5197121"
                 target="_blank"
                 rel="noreferrer"
-                className="btn btn-secondary backdrop-blur"
+                className="btn btn-hero-secondary"
               >
                 🏠 View the House on VRBO
               </a>

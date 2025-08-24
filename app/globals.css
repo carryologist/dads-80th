@@ -281,6 +281,36 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Hero Button Styles - Inverse Hover Effects */
+.btn-hero-primary {
+  background: var(--gradient-sunset);
+  color: white;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hero-primary:hover {
+  background: white;
+  color: var(--brand-accent);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.btn-hero-secondary {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--foreground);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hero-secondary:hover {
+  background: var(--gradient-sunset);
+  color: white;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
 .text-shadow {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
