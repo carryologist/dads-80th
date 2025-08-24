@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { sql } from '@vercel/postgres'
+import { prisma } from '../../../lib/prisma'
 
 export async function POST(request: Request) {
   try {
@@ -7,10 +7,10 @@ export async function POST(request: Request) {
     const name = String(formData.get('name') || '')
     const activity_name = String(formData.get('activity_name') || '')
     const description = String(formData.get('description') || '')
-    const location = String(formData.get('location') || '')
-    const website = String(formData.get('website') || '')
+    const location = String(formData.get('location') || '') || null
+    const website = String(formData.get('website') || '') || null
     const category = String(formData.get('category') || '')
-    const notes = String(formData.get('notes') || '')
+    const notes = String(formData.get('notes') || '') || null
 
     console.log('Form data received:', { name, activity_name, description, category });
 
@@ -19,30 +19,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Try database first
     try {
-      await sql`CREATE TABLE IF NOT EXISTS activity_suggestions (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        activity_name TEXT NOT NULL,
-        description TEXT NOT NULL,
-        location TEXT,
-        website TEXT,
-        category TEXT NOT NULL,
-        notes TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )`;
+      const suggestion = await prisma.activitySuggestion.create({
+        data: {
+          name,
+          activityName: activity_name,
+          description,
+          location,
+          website,
+          category,
+          notes
+        }
+      });
       
-      await sql`INSERT INTO activity_suggestions (name, activity_name, description, location, website, category, notes)
-        VALUES (${name}, ${activity_name}, ${description}, ${location}, ${website}, ${category}, ${notes})`;
-      
-      console.log('Data saved to database successfully');
-      return NextResponse.json({ ok: true, storage: 'database' })
+      console.log('Activity suggestion saved to database:', suggestion.id);
+      return NextResponse.json({ ok: true, storage: 'database', id: suggestion.id })
     } catch (dbError) {
       console.log('Database not available, but form submission received:', dbError);
       
-      // For now, just accept the submission and return success
-      // In a production app, you'd want to use Vercel KV, Upstash, or another service
+      // Fallback: accept the submission and return success
       console.log('Activity suggestion received:', {
         name,
         activity_name,
@@ -68,22 +63,27 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    // Try database first
     try {
-      await sql`CREATE TABLE IF NOT EXISTS activity_suggestions (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        activity_name TEXT NOT NULL,
-        description TEXT NOT NULL,
-        location TEXT,
-        website TEXT,
-        category TEXT NOT NULL,
-        notes TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )`;
-
-      const result = await sql`SELECT * FROM activity_suggestions ORDER BY created_at DESC`;
-      return NextResponse.json({ suggestions: result.rows, storage: 'database' })
+      const suggestions = await prisma.activitySuggestion.findMany({
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+      
+      // Transform to match the expected format
+      const transformedSuggestions = suggestions.map(s => ({
+        id: s.id,
+        name: s.name,
+        activity_name: s.activityName,
+        description: s.description,
+        location: s.location,
+        website: s.website,
+        category: s.category,
+        notes: s.notes,
+        created_at: s.createdAt.toISOString()
+      }));
+      
+      return NextResponse.json({ suggestions: transformedSuggestions, storage: 'database' })
     } catch (dbError) {
       console.log('Database not available for GET:', dbError);
       

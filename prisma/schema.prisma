@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ActivitySuggestion {
+  id            String   @id @default(cuid())
+  name          String
+  activityName  String   @map("activity_name")
+  description   String
+  location      String?
+  website       String?
+  category      String
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("activity_suggestions")
+}
+
+model TravelNote {
+  id            String   @id @default(cuid())
+  name          String
+  arrivalDate   DateTime @map("arrival_date") @db.Date
+  departureDate DateTime @map("departure_date") @db.Date
+  travelMethod  String   @map("travel_method")
+  accommodation String
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("travel_notes")
+}

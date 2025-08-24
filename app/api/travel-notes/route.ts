@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { sql } from '@vercel/postgres'
+import { prisma } from '../../../lib/prisma'
 
 export async function POST(request: Request) {
   try {
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const departure_date = String(formData.get('departure_date') || '')
     const travel_method = String(formData.get('travel_method') || '')
     const accommodation = String(formData.get('accommodation') || '')
-    const notes = String(formData.get('notes') || '')
+    const notes = String(formData.get('notes') || '') || null
 
     console.log('Travel note data received:', { name, arrival_date, departure_date });
 
@@ -18,28 +18,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Try database first
     try {
-      await sql`CREATE TABLE IF NOT EXISTS travel_notes (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        arrival_date DATE NOT NULL,
-        departure_date DATE NOT NULL,
-        travel_method TEXT NOT NULL,
-        accommodation TEXT NOT NULL,
-        notes TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )`;
+      const travelNote = await prisma.travelNote.create({
+        data: {
+          name,
+          arrivalDate: new Date(arrival_date),
+          departureDate: new Date(departure_date),
+          travelMethod: travel_method,
+          accommodation,
+          notes
+        }
+      });
       
-      await sql`INSERT INTO travel_notes (name, arrival_date, departure_date, travel_method, accommodation, notes)
-        VALUES (${name}, ${arrival_date}, ${departure_date}, ${travel_method}, ${accommodation}, ${notes})`;
-      
-      console.log('Travel note saved to database successfully');
-      return NextResponse.json({ ok: true, storage: 'database' })
+      console.log('Travel note saved to database:', travelNote.id);
+      return NextResponse.json({ ok: true, storage: 'database', id: travelNote.id })
     } catch (dbError) {
       console.log('Database not available, but travel note received:', dbError);
       
-      // For now, just accept the submission and return success
+      // Fallback: accept the submission and return success
       console.log('Travel note received:', {
         name,
         arrival_date,
@@ -64,21 +60,26 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    // Try database first
     try {
-      await sql`CREATE TABLE IF NOT EXISTS travel_notes (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        arrival_date DATE NOT NULL,
-        departure_date DATE NOT NULL,
-        travel_method TEXT NOT NULL,
-        accommodation TEXT NOT NULL,
-        notes TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )`;
-
-      const result = await sql`SELECT * FROM travel_notes ORDER BY created_at DESC`;
-      return NextResponse.json({ notes: result.rows, storage: 'database' })
+      const travelNotes = await prisma.travelNote.findMany({
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+      
+      // Transform to match the expected format
+      const transformedNotes = travelNotes.map(note => ({
+        id: note.id,
+        name: note.name,
+        arrival_date: note.arrivalDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        departure_date: note.departureDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        travel_method: note.travelMethod,
+        accommodation: note.accommodation,
+        notes: note.notes,
+        created_at: note.createdAt.toISOString()
+      }));
+      
+      return NextResponse.json({ notes: transformedNotes, storage: 'database' })
     } catch (dbError) {
       console.log('Database not available for GET:', dbError);
       
