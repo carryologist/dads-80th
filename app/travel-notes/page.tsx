@@ -1,3 +1,4 @@
+import { prisma } from "../../lib/prisma";
 import TravelPlanForm from "../../components/TravelPlanForm";
 
 interface TravelNote {
@@ -11,19 +12,33 @@ interface TravelNote {
   created_at: string;
 }
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default async function TravelNotes() {
   let travelNotes: TravelNote[] = [];
 
   try {
-    const response = await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/travel-notes`, {
-      cache: 'no-store'
+    const notes = await prisma.travelNote.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
-    if (response.ok) {
-      const data = await response.json();
-      travelNotes = data.notes || [];
-    }
-  } catch (_e) {
-    // Ignore errors so the page still renders if API is not available yet.
+    
+    // Transform to match the expected format
+    travelNotes = notes.map(note => ({
+      id: note.id,
+      name: note.name,
+      arrival_date: note.arrivalDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      departure_date: note.departureDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      travel_method: note.travelMethod,
+      accommodation: note.accommodation,
+      notes: note.notes || '',
+      created_at: note.createdAt.toISOString()
+    }));
+  } catch (error) {
+    console.log('Could not fetch travel notes:', error);
+    // Page will render without travel notes
   }
 
   const formatDate = (dateString: string) => {

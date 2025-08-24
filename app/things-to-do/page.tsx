@@ -1,3 +1,4 @@
+import { prisma } from "../../lib/prisma";
 import ActivitySuggestionForm from "../../components/ActivitySuggestionForm";
 
 interface ActivitySuggestion {
@@ -141,19 +142,34 @@ const featuredActivities = [
   }
 ];
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default async function ThingsToDo() {
   let userSuggestions: ActivitySuggestion[] = [];
 
   try {
-    const response = await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/activity-suggestions`, {
-      cache: 'no-store'
+    const suggestions = await prisma.activitySuggestion.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
-    if (response.ok) {
-      const data = await response.json();
-      userSuggestions = data.suggestions || [];
-    }
-  } catch (_e) {
-    // Ignore errors so the page still renders if API is not available yet.
+    
+    // Transform to match the expected format
+    userSuggestions = suggestions.map(s => ({
+      id: s.id,
+      name: s.name,
+      activity_name: s.activityName,
+      description: s.description,
+      location: s.location || '',
+      website: s.website || '',
+      category: s.category,
+      notes: s.notes || '',
+      created_at: s.createdAt.toISOString()
+    }));
+  } catch (error) {
+    console.log('Could not fetch activity suggestions:', error);
+    // Page will render without user suggestions
   }
 
   const getCategoryIcon = (category: string) => {
