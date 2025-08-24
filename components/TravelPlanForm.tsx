@@ -20,11 +20,8 @@ const travelMethods = [
 ];
 
 const accommodationOptions = [
-  "The main house",
-  "Hotel/Motel nearby",
-  "Airbnb/Rental",
-  "Staying with family",
-  "Other"
+  "Stay at the Whiteley Compound",
+  "Stay at the Airbnb"
 ];
 
 export default function TravelPlanForm() {

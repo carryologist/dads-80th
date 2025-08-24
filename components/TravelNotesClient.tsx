@@ -238,8 +238,9 @@ export default function TravelNotesClient({
     {
       name: 'accommodation',
       label: 'Where are you staying?',
-      type: 'text' as const,
+      type: 'select' as const,
       required: true,
+      options: ['Stay at the Whiteley Compound', 'Stay at the Airbnb'],
       value: editingNote.accommodation || ''
     },
     {
