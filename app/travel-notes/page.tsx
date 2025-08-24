@@ -92,7 +92,7 @@ export default async function TravelNotes() {
             {travelNotes.map((note, index) => (
               <div 
                 key={note.id}
-                className="card border-2 border-[var(--brand-accent)]/30 bg-gradient-to-r from-[var(--brand-accent)]/5 to-transparent hover:scale-[1.02] transition-transform duration-300"
+                className="card border-2 border-blue-400 bg-gradient-to-r from-blue-50/50 to-transparent hover:scale-[1.02] transition-transform duration-300"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-start gap-4">
@@ -104,7 +104,7 @@ export default async function TravelNotes() {
                       <h3 className="font-display text-xl font-semibold flex-1">
                         {note.name}
                       </h3>
-                      <div className="badge badge-accent text-xs">
+                      <div className="badge badge-blue text-xs">
                         {note.travel_method}
                       </div>
                     </div>
