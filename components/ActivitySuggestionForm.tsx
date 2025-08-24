@@ -19,16 +19,26 @@ export default function ActivitySuggestionForm() {
   async function onSubmit(formData: FormData) {
     setSubmitting(true);
     setStatus(null);
-    const res = await fetch("/api/activity-suggestions", {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) {
-      setStatus("Something went wrong. Please try again.");
-    } else {
-      setStatus("Thanks! Your activity suggestion has been added.");
-      (document.getElementById("activity-suggestion-form") as HTMLFormElement)?.reset();
+    
+    try {
+      const res = await fetch("/api/activity-suggestions", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('API Error:', errorData);
+        setStatus(`Error: ${errorData.error || 'Something went wrong. Please try again.'}`);  
+      } else {
+        setStatus("Thanks! Your activity suggestion has been added.");
+        (document.getElementById("activity-suggestion-form") as HTMLFormElement)?.reset();
+      }
+    } catch (error) {
+      console.error('Network Error:', error);
+      setStatus("Network error. Please check your connection and try again.");
     }
+    
     setSubmitting(false);
   }
 

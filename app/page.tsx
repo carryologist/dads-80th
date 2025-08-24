@@ -39,7 +39,7 @@ export default function Home() {
           alt="Bob Whiteley by the water - celebrating 80 years of life"
           fill
           priority
-          className="object-cover"
+          className="object-cover object-[center_20%]"
         />
         <div className="absolute inset-0 hero-overlay"></div>
         <div className="absolute inset-0 flex items-center justify-center hero-content">
@@ -48,7 +48,7 @@ export default function Home() {
               🏖️ July 5–12, 2026 • Fairhaven & Mattapoisett, MA
             </div>
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-4 text-shadow">
-              Bob Whiteley turns <span className="text-gradient">80</span>
+              Bob Whiteley turns <span className="text-gradient-hero">80</span>
             </h1>
             <p className="text-lg sm:text-xl lg:text-2xl opacity-95 mb-2 text-shadow max-w-3xl mx-auto">
               A week on Buzzards Bay with family, seaside sunsets, and celebrations.
