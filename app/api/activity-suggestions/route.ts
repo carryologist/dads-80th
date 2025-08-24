@@ -256,3 +256,245 @@ export async function GET() {
     })
   }
 }
+
+export async function DELETE(request: Request) {
+  const requestId = Math.random().toString(36).substring(7);
+  debugLog(`🗑️ DELETE REQUEST STARTED [${requestId}]`);
+  
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    
+    debugLog('Delete request parameters', { id });
+    
+    if (!id) {
+      debugLog('❌ Missing ID parameter');
+      return NextResponse.json({ 
+        error: 'Missing ID parameter',
+        requestId
+      }, { status: 400 });
+    }
+    
+    // Initialize database
+    debugLog('Initializing database for DELETE');
+    await initializeDatabase();
+    debugLog('✅ Database initialization complete for DELETE');
+    
+    try {
+      debugLog('Attempting to delete record');
+      
+      // Check if record exists first
+      const existingRecord = await prisma.activitySuggestion.findUnique({
+        where: { id }
+      });
+      
+      if (!existingRecord) {
+        debugLog('❌ Record not found for deletion');
+        return NextResponse.json({ 
+          error: 'Record not found',
+          requestId
+        }, { status: 404 });
+      }
+      
+      debugLog('Record found, proceeding with deletion', {
+        id: existingRecord.id,
+        name: existingRecord.name,
+        activityName: existingRecord.activityName
+      });
+      
+      // Delete the record
+      await prisma.activitySuggestion.delete({
+        where: { id }
+      });
+      
+      debugLog('✅ Record deleted successfully');
+      
+      // Count remaining records
+      const remainingCount = await prisma.activitySuggestion.count();
+      debugLog(`✅ ${remainingCount} records remaining in database`);
+      
+      return NextResponse.json({ 
+        ok: true, 
+        message: 'Activity suggestion deleted successfully!',
+        requestId,
+        remainingRecords: remainingCount
+      });
+      
+    } catch (dbError) {
+      debugLog('❌ Database delete failed', {
+        error: String(dbError),
+        stack: dbError instanceof Error ? dbError.stack : 'No stack trace'
+      });
+      
+      return NextResponse.json({ 
+        error: 'Failed to delete record: ' + String(dbError),
+        requestId
+      }, { status: 500 });
+    }
+  } catch (err) {
+    debugLog('❌ General DELETE error', {
+      error: String(err),
+      stack: err instanceof Error ? err.stack : 'No stack trace'
+    });
+    
+    return NextResponse.json({ 
+      error: 'Server error: ' + String(err),
+      requestId
+    }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  const requestId = Math.random().toString(36).substring(7);
+  debugLog(`✏️ PUT REQUEST STARTED [${requestId}]`);
+  
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    
+    debugLog('PUT request parameters', { id });
+    
+    if (!id) {
+      debugLog('❌ Missing ID parameter');
+      return NextResponse.json({ 
+        error: 'Missing ID parameter',
+        requestId
+      }, { status: 400 });
+    }
+    
+    // Initialize database
+    debugLog('Initializing database for PUT');
+    await initializeDatabase();
+    debugLog('✅ Database initialization complete for PUT');
+    
+    // Parse form data
+    debugLog('Parsing form data for update');
+    const formData = await request.formData();
+    
+    const formEntries = Array.from(formData.entries());
+    debugLog('Raw form entries for update', formEntries);
+    
+    const name = String(formData.get('name') || '')
+    const activity_name = String(formData.get('activity_name') || '')
+    const description = String(formData.get('description') || '')
+    const location = String(formData.get('location') || '') || null
+    const website = String(formData.get('website') || '') || null
+    const category = String(formData.get('category') || '')
+    const notes = String(formData.get('notes') || '') || null
+
+    const parsedData = { name, activity_name, description, location, website, category, notes };
+    debugLog('Parsed form data for update', parsedData);
+
+    // Validation
+    debugLog('Validating required fields for update');
+    const validation = {
+      name: !!name,
+      activity_name: !!activity_name,
+      description: !!description,
+      category: !!category
+    };
+    debugLog('Validation results for update', validation);
+    
+    if (!name || !activity_name || !description || !category) {
+      debugLog('❌ Validation failed - missing required fields for update');
+      return NextResponse.json({ 
+        error: 'Missing required fields',
+        validation,
+        requestId
+      }, { status: 400 })
+    }
+    debugLog('✅ Validation passed for update');
+
+    try {
+      debugLog('Attempting to update record');
+      
+      // Check if record exists first
+      const existingRecord = await prisma.activitySuggestion.findUnique({
+        where: { id }
+      });
+      
+      if (!existingRecord) {
+        debugLog('❌ Record not found for update');
+        return NextResponse.json({ 
+          error: 'Record not found',
+          requestId
+        }, { status: 404 });
+      }
+      
+      debugLog('Record found, proceeding with update', {
+        id: existingRecord.id,
+        currentName: existingRecord.name,
+        currentActivityName: existingRecord.activityName
+      });
+      
+      // Update the record
+      const updatedRecord = await prisma.activitySuggestion.update({
+        where: { id },
+        data: {
+          name,
+          activityName: activity_name,
+          description,
+          location,
+          website,
+          category,
+          notes
+        }
+      });
+      
+      debugLog('✅ Record updated successfully', {
+        id: updatedRecord.id,
+        name: updatedRecord.name
+      });
+      
+      // Verification step
+      debugLog('Verifying record was updated');
+      const verification = await prisma.activitySuggestion.findUnique({
+        where: { id }
+      });
+      
+      if (verification) {
+        debugLog('✅ Verification successful - record updated in database');
+        
+        return NextResponse.json({ 
+          ok: true, 
+          message: 'Activity suggestion updated successfully!',
+          requestId,
+          updatedRecord: {
+            id: verification.id,
+            name: verification.name,
+            activityName: verification.activityName,
+            description: verification.description,
+            location: verification.location,
+            website: verification.website,
+            category: verification.category,
+            notes: verification.notes
+          }
+        })
+      } else {
+        debugLog('❌ Verification failed - record not found after update');
+        throw new Error('Record verification failed after update');
+      }
+      
+    } catch (dbError) {
+      debugLog('❌ Database update failed', {
+        error: String(dbError),
+        stack: dbError instanceof Error ? dbError.stack : 'No stack trace'
+      });
+      
+      return NextResponse.json({ 
+        error: 'Failed to update record: ' + String(dbError),
+        requestId
+      }, { status: 500 });
+    }
+  } catch (err) {
+    debugLog('❌ General PUT error', {
+      error: String(err),
+      stack: err instanceof Error ? err.stack : 'No stack trace'
+    });
+    
+    return NextResponse.json({ 
+      error: 'Server error: ' + String(err),
+      requestId
+    }, { status: 500 });
+  }
+}

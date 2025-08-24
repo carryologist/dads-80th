@@ -253,3 +253,243 @@ export async function GET() {
     })
   }
 }
+
+export async function DELETE(request: Request) {
+  const requestId = Math.random().toString(36).substring(7);
+  debugLog(`🗑️ DELETE REQUEST STARTED [${requestId}]`);
+  
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    
+    debugLog('Delete request parameters', { id });
+    
+    if (!id) {
+      debugLog('❌ Missing ID parameter');
+      return NextResponse.json({ 
+        error: 'Missing ID parameter',
+        requestId
+      }, { status: 400 });
+    }
+    
+    // Initialize database
+    debugLog('Initializing database for DELETE');
+    await initializeDatabase();
+    debugLog('✅ Database initialization complete for DELETE');
+    
+    try {
+      debugLog('Attempting to delete travel note');
+      
+      // Check if record exists first
+      const existingRecord = await prisma.travelNote.findUnique({
+        where: { id }
+      });
+      
+      if (!existingRecord) {
+        debugLog('❌ Travel note not found for deletion');
+        return NextResponse.json({ 
+          error: 'Travel note not found',
+          requestId
+        }, { status: 404 });
+      }
+      
+      debugLog('Travel note found, proceeding with deletion', {
+        id: existingRecord.id,
+        name: existingRecord.name,
+        arrivalDate: existingRecord.arrivalDate
+      });
+      
+      // Delete the record
+      await prisma.travelNote.delete({
+        where: { id }
+      });
+      
+      debugLog('✅ Travel note deleted successfully');
+      
+      // Count remaining records
+      const remainingCount = await prisma.travelNote.count();
+      debugLog(`✅ ${remainingCount} travel notes remaining in database`);
+      
+      return NextResponse.json({ 
+        ok: true, 
+        message: 'Travel note deleted successfully!',
+        requestId,
+        remainingRecords: remainingCount
+      });
+      
+    } catch (dbError) {
+      debugLog('❌ Database delete failed', {
+        error: String(dbError),
+        stack: dbError instanceof Error ? dbError.stack : 'No stack trace'
+      });
+      
+      return NextResponse.json({ 
+        error: 'Failed to delete travel note: ' + String(dbError),
+        requestId
+      }, { status: 500 });
+    }
+  } catch (err) {
+    debugLog('❌ General DELETE error', {
+      error: String(err),
+      stack: err instanceof Error ? err.stack : 'No stack trace'
+    });
+    
+    return NextResponse.json({ 
+      error: 'Server error: ' + String(err),
+      requestId
+    }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  const requestId = Math.random().toString(36).substring(7);
+  debugLog(`✏️ PUT REQUEST STARTED [${requestId}]`);
+  
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    
+    debugLog('PUT request parameters', { id });
+    
+    if (!id) {
+      debugLog('❌ Missing ID parameter');
+      return NextResponse.json({ 
+        error: 'Missing ID parameter',
+        requestId
+      }, { status: 400 });
+    }
+    
+    // Initialize database
+    debugLog('Initializing database for PUT');
+    await initializeDatabase();
+    debugLog('✅ Database initialization complete for PUT');
+    
+    // Parse form data
+    debugLog('Parsing form data for travel note update');
+    const formData = await request.formData();
+    
+    const formEntries = Array.from(formData.entries());
+    debugLog('Raw form entries for travel note update', formEntries);
+    
+    const name = String(formData.get('name') || '')
+    const arrival_date = String(formData.get('arrival_date') || '')
+    const departure_date = String(formData.get('departure_date') || '')
+    const travel_method = String(formData.get('travel_method') || '')
+    const accommodation = String(formData.get('accommodation') || '')
+    const notes = String(formData.get('notes') || '') || null
+
+    const parsedData = { name, arrival_date, departure_date, travel_method, accommodation, notes };
+    debugLog('Parsed form data for travel note update', parsedData);
+
+    // Validation
+    debugLog('Validating required fields for travel note update');
+    const validation = {
+      name: !!name,
+      arrival_date: !!arrival_date,
+      departure_date: !!departure_date,
+      travel_method: !!travel_method,
+      accommodation: !!accommodation
+    };
+    debugLog('Validation results for travel note update', validation);
+    
+    if (!name || !arrival_date || !departure_date || !travel_method || !accommodation) {
+      debugLog('❌ Validation failed - missing required fields for travel note update');
+      return NextResponse.json({ 
+        error: 'Missing required fields',
+        validation,
+        requestId
+      }, { status: 400 })
+    }
+    debugLog('✅ Validation passed for travel note update');
+
+    try {
+      debugLog('Attempting to update travel note');
+      
+      // Check if record exists first
+      const existingRecord = await prisma.travelNote.findUnique({
+        where: { id }
+      });
+      
+      if (!existingRecord) {
+        debugLog('❌ Travel note not found for update');
+        return NextResponse.json({ 
+          error: 'Travel note not found',
+          requestId
+        }, { status: 404 });
+      }
+      
+      debugLog('Travel note found, proceeding with update', {
+        id: existingRecord.id,
+        currentName: existingRecord.name,
+        currentArrivalDate: existingRecord.arrivalDate
+      });
+      
+      // Update the record
+      const updatedRecord = await prisma.travelNote.update({
+        where: { id },
+        data: {
+          name,
+          arrivalDate: new Date(arrival_date),
+          departureDate: new Date(departure_date),
+          travelMethod: travel_method,
+          accommodation,
+          notes
+        }
+      });
+      
+      debugLog('✅ Travel note updated successfully', {
+        id: updatedRecord.id,
+        name: updatedRecord.name
+      });
+      
+      // Verification step
+      debugLog('Verifying travel note was updated');
+      const verification = await prisma.travelNote.findUnique({
+        where: { id }
+      });
+      
+      if (verification) {
+        debugLog('✅ Verification successful - travel note updated in database');
+        
+        return NextResponse.json({ 
+          ok: true, 
+          message: 'Travel note updated successfully!',
+          requestId,
+          updatedRecord: {
+            id: verification.id,
+            name: verification.name,
+            arrivalDate: verification.arrivalDate.toISOString().split('T')[0],
+            departureDate: verification.departureDate.toISOString().split('T')[0],
+            travelMethod: verification.travelMethod,
+            accommodation: verification.accommodation,
+            notes: verification.notes
+          }
+        })
+      } else {
+        debugLog('❌ Verification failed - travel note not found after update');
+        throw new Error('Travel note verification failed after update');
+      }
+      
+    } catch (dbError) {
+      debugLog('❌ Database update failed for travel note', {
+        error: String(dbError),
+        stack: dbError instanceof Error ? dbError.stack : 'No stack trace'
+      });
+      
+      return NextResponse.json({ 
+        error: 'Failed to update travel note: ' + String(dbError),
+        requestId
+      }, { status: 500 });
+    }
+  } catch (err) {
+    debugLog('❌ General PUT error for travel note', {
+      error: String(err),
+      stack: err instanceof Error ? err.stack : 'No stack trace'
+    });
+    
+    return NextResponse.json({ 
+      error: 'Server error: ' + String(err),
+      requestId
+    }, { status: 500 });
+  }
+}

@@ -1,5 +1,9 @@
+'use client'
+
+import { useState } from 'react'
 import { prisma } from "../../lib/prisma";
 import ActivitySuggestionForm from "../../components/ActivitySuggestionForm";
+import EditModal from "../../components/EditModal";
 
 interface ActivitySuggestion {
   id: string;
@@ -14,6 +18,7 @@ interface ActivitySuggestion {
 }
 
 interface Activity {
+  id?: string;
   name: string;
   description: string;
   location: string;
@@ -23,6 +28,7 @@ interface Activity {
   isUserSubmitted?: boolean;
   submittedBy?: string;
   notes?: string;
+  category?: string;
 }
 
 interface CategoryGroup {
@@ -163,96 +169,257 @@ const baseFeaturedActivities: CategoryGroup[] = [
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-export default async function ThingsToDo() {
-  let userSuggestions: ActivitySuggestion[] = [];
+// Client component for handling edit/delete actions
+function ActivityCard({ 
+  activity, 
+  categoryIcon, 
+  categoryIndex, 
+  activityIndex,
+  onEdit,
+  onDelete 
+}: { 
+  activity: Activity
+  categoryIcon: string
+  categoryIndex: number
+  activityIndex: number
+  onEdit?: (activity: Activity) => void
+  onDelete?: (activityId: string) => void
+}) {
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  try {
-    const suggestions = await prisma.activitySuggestion.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+  const handleDelete = async () => {
+    if (!activity.id || !onDelete) return
     
-    // Transform to match the expected format
-    userSuggestions = suggestions.map(s => ({
-      id: s.id,
-      name: s.name,
-      activity_name: s.activityName,
-      description: s.description,
-      location: s.location || '',
-      website: s.website || '',
-      category: s.category,
-      notes: s.notes || '',
-      created_at: s.createdAt.toISOString()
-    }));
-  } catch (error) {
-    console.log('Could not fetch activity suggestions:', error);
-    // Page will render without user suggestions
+    if (confirm(`Are you sure you want to delete "${activity.name}"? This action cannot be undone.`)) {
+      setIsDeleting(true)
+      try {
+        await onDelete(activity.id)
+      } catch (error) {
+        console.error('Delete failed:', error)
+        alert('Failed to delete activity. Please try again.')
+      } finally {
+        setIsDeleting(false)
+      }
+    }
   }
 
-  // Merge user suggestions into appropriate categories
-  const featuredActivities: CategoryGroup[] = baseFeaturedActivities.map(categoryGroup => {
-    // Find user suggestions for this category
-    const userActivitiesForCategory = userSuggestions
-      .filter(suggestion => suggestion.category === categoryGroup.category)
-      .map(suggestion => ({
-        name: suggestion.activity_name,
-        description: suggestion.description,
-        location: suggestion.location,
-        website: suggestion.website || undefined,
-        isUserSubmitted: true,
-        submittedBy: suggestion.name,
-        notes: suggestion.notes || undefined
-      }));
+  return (
+    <div 
+      className={`card hover:scale-[1.02] transition-transform duration-300 ${
+        activity.isUserSubmitted 
+          ? 'border-2 border-blue-400 bg-gradient-to-r from-blue-50/50 to-transparent' 
+          : ''
+      }`}
+      style={{ animationDelay: `${(categoryIndex * 2 + activityIndex) * 0.1}s` }}
+    >
+      <div className="grid lg:grid-cols-[300px_1fr] gap-6">
+        {/* Activity Image */}
+        <div className="relative aspect-[4/3] lg:aspect-[3/2] image-rounded overflow-hidden">
+          <div className="w-full h-full bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center">
+            <div className="text-6xl opacity-50">{categoryIcon}</div>
+          </div>
+        </div>
+        
+        {/* Activity Details */}
+        <div className="flex-1">
+          <div className="flex flex-wrap items-start gap-3 mb-3">
+            <h3 className="font-display text-xl font-semibold flex-1">
+              {activity.name}
+            </h3>
+            {activity.isUserSubmitted && (
+              <div className="badge badge-blue text-xs">
+                Suggested by {activity.submittedBy}
+              </div>
+            )}
+            <div className="flex gap-2">
+              {activity.website && (
+                <a
+                  href={activity.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary text-sm"
+                >
+                  🔗 Visit Website
+                </a>
+              )}
+              {activity.isUserSubmitted && activity.id && onEdit && (
+                <button
+                  onClick={() => onEdit(activity)}
+                  className="btn btn-secondary text-sm"
+                  title="Edit activity"
+                >
+                  ✏️ Edit
+                </button>
+              )}
+              {activity.isUserSubmitted && activity.id && onDelete && (
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="btn btn-secondary text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  title="Delete activity"
+                >
+                  {isDeleting ? '⏳' : '🗑️'} {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {activity.location && (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">📍</span>
+              <p className="text-sm opacity-75">{activity.location}</p>
+            </div>
+          )}
+          
+          <p className="text-sm opacity-80 mb-4 leading-relaxed">
+            {activity.description}
+          </p>
+          
+          {activity.highlights && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {activity.highlights.map((highlight) => (
+                <span 
+                  key={highlight}
+                  className="badge badge-primary text-xs"
+                >
+                  {highlight}
+                </span>
+              ))}
+            </div>
+          )}
+          
+          {activity.notes && (
+            <div className="mt-3 p-3 bg-[var(--surface-secondary)] rounded-lg">
+              <p className="text-sm opacity-80">
+                💭 {activity.notes}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
-    return {
-      ...categoryGroup,
-      activities: [...categoryGroup.activities, ...userActivitiesForCategory]
-    };
-  });
+// Client component wrapper
+function ThingsToDoClient({ 
+  initialActivities, 
+  initialUserSuggestions 
+}: { 
+  initialActivities: CategoryGroup[]
+  initialUserSuggestions: ActivitySuggestion[]
+}) {
+  const [featuredActivities, setFeaturedActivities] = useState(initialActivities)
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Handle user suggestions for categories that don't exist in base categories
-  const existingCategories = baseFeaturedActivities.map(cat => cat.category);
-  const newCategories = [...new Set(
-    userSuggestions
-      .filter(suggestion => !existingCategories.includes(suggestion.category))
-      .map(suggestion => suggestion.category)
-  )];
+  const handleEdit = (activity: Activity) => {
+    setEditingActivity(activity)
+    setIsEditModalOpen(true)
+  }
 
-  // Add new categories for user suggestions
-  newCategories.forEach(category => {
-    const userActivitiesForCategory = userSuggestions
-      .filter(suggestion => suggestion.category === category)
-      .map(suggestion => ({
-        name: suggestion.activity_name,
-        description: suggestion.description,
-        location: suggestion.location,
-        website: suggestion.website || undefined,
-        isUserSubmitted: true,
-        submittedBy: suggestion.name,
-        notes: suggestion.notes || undefined
-      }));
+  const handleSaveEdit = async (formData: Record<string, string>) => {
+    if (!editingActivity?.id) return
+    
+    setIsLoading(true)
+    try {
+      const form = new FormData()
+      Object.entries(formData).forEach(([key, value]) => {
+        form.append(key, value)
+      })
+      
+      const response = await fetch(`/api/activity-suggestions?id=${editingActivity.id}`, {
+        method: 'PUT',
+        body: form
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update activity')
+      }
+      
+      // Refresh the page to show updated data
+      window.location.reload()
+    } catch (error) {
+      console.error('Edit failed:', error)
+      alert('Failed to update activity. Please try again.')
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-    const getCategoryIcon = (category: string) => {
-      const iconMap: { [key: string]: string } = {
-        "Outdoors & Nature": "🌊",
-        "Museums & History": "🏛️",
-        "Food & Drink": "🍽️",
-        "Entertainment": "🎭",
-        "Shopping": "🛍️",
-        "Day Trips": "⛵",
-        "Family-Friendly": "👨‍👩‍👧‍👦",
-        "Other": "✨"
-      };
-      return iconMap[category] || "✨";
-    };
+  const handleDelete = async (activityId: string) => {
+    const response = await fetch(`/api/activity-suggestions?id=${activityId}`, {
+      method: 'DELETE'
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete activity')
+    }
+    
+    // Refresh the page to show updated data
+    window.location.reload()
+  }
 
-    featuredActivities.push({
-      category,
-      icon: getCategoryIcon(category),
-      activities: userActivitiesForCategory
-    });
-  });
+  const editFields = editingActivity ? [
+    {
+      name: 'name',
+      label: 'Your Name',
+      type: 'text' as const,
+      required: true,
+      value: editingActivity.submittedBy || ''
+    },
+    {
+      name: 'activity_name',
+      label: 'Activity Name',
+      type: 'text' as const,
+      required: true,
+      value: editingActivity.name || ''
+    },
+    {
+      name: 'category',
+      label: 'Category',
+      type: 'select' as const,
+      required: true,
+      options: [
+        'Outdoors & Nature',
+        'Museums & History',
+        'Food & Drink',
+        'Entertainment',
+        'Shopping',
+        'Day Trips',
+        'Family-Friendly',
+        'Other'
+      ],
+      value: editingActivity.category || ''
+    },
+    {
+      name: 'description',
+      label: 'Description',
+      type: 'textarea' as const,
+      required: true,
+      value: editingActivity.description || ''
+    },
+    {
+      name: 'location',
+      label: 'Location',
+      type: 'text' as const,
+      value: editingActivity.location || ''
+    },
+    {
+      name: 'website',
+      label: 'Website',
+      type: 'text' as const,
+      value: editingActivity.website || ''
+    },
+    {
+      name: 'notes',
+      label: 'Additional Notes',
+      type: 'textarea' as const,
+      value: editingActivity.notes || ''
+    }
+  ] : []
 
   return (
     <div className="container space-y-16 animate-fade-in">
@@ -279,86 +446,15 @@ export default async function ThingsToDo() {
           
           <div className="grid gap-8">
             {categoryGroup.activities.map((activity, activityIndex) => (
-              <div 
+              <ActivityCard
                 key={`${activity.name}-${activityIndex}`}
-                className={`card hover:scale-[1.02] transition-transform duration-300 ${
-                  activity.isUserSubmitted 
-                    ? 'border-2 border-blue-400 bg-gradient-to-r from-blue-50/50 to-transparent' 
-                    : ''
-                }`}
-                style={{ animationDelay: `${(categoryIndex * 2 + activityIndex) * 0.1}s` }}
-              >
-                <div className="grid lg:grid-cols-[300px_1fr] gap-6">
-                  {/* Activity Image */}
-                  <div className="relative aspect-[4/3] lg:aspect-[3/2] image-rounded overflow-hidden">
-                    {activity.image ? (
-                      <div className="w-full h-full bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center">
-                        <div className="text-6xl opacity-50">{categoryGroup.icon}</div>
-                      </div>
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center">
-                        <div className="text-6xl opacity-50">{categoryGroup.icon}</div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Activity Details */}
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-start gap-3 mb-3">
-                      <h3 className="font-display text-xl font-semibold flex-1">
-                        {activity.name}
-                      </h3>
-                      {activity.isUserSubmitted && (
-                        <div className="badge badge-blue text-xs">
-                          Suggested by {activity.submittedBy}
-                        </div>
-                      )}
-                      {activity.website && (
-                        <a
-                          href={activity.website}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn btn-secondary text-sm"
-                        >
-                          🔗 Visit Website
-                        </a>
-                      )}
-                    </div>
-                    
-                    {activity.location && (
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg">📍</span>
-                        <p className="text-sm opacity-75">{activity.location}</p>
-                      </div>
-                    )}
-                    
-                    <p className="text-sm opacity-80 mb-4 leading-relaxed">
-                      {activity.description}
-                    </p>
-                    
-                    {activity.highlights && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {activity.highlights.map((highlight) => (
-                          <span 
-                            key={highlight}
-                            className="badge badge-primary text-xs"
-                          >
-                            {highlight}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {activity.notes && (
-                      <div className="mt-3 p-3 bg-[var(--surface-secondary)] rounded-lg">
-                        <p className="text-sm opacity-80">
-                          💭 {activity.notes}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                activity={activity}
+                categoryIcon={categoryGroup.icon}
+                categoryIndex={categoryIndex}
+                activityIndex={activityIndex}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))}
           </div>
         </section>
@@ -401,6 +497,122 @@ export default async function ThingsToDo() {
           </div>
         </div>
       </section>
+
+      {/* Edit Modal */}
+      <EditModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setEditingActivity(null)
+        }}
+        onSave={handleSaveEdit}
+        title="Edit Activity Suggestion"
+        fields={editFields}
+        isLoading={isLoading}
+      />
     </div>
+  )
+}
+
+export default async function ThingsToDo() {
+  let userSuggestions: ActivitySuggestion[] = [];
+
+  try {
+    const suggestions = await prisma.activitySuggestion.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    // Transform to match the expected format
+    userSuggestions = suggestions.map(s => ({
+      id: s.id,
+      name: s.name,
+      activity_name: s.activityName,
+      description: s.description,
+      location: s.location || '',
+      website: s.website || '',
+      category: s.category,
+      notes: s.notes || '',
+      created_at: s.createdAt.toISOString()
+    }));
+  } catch (error) {
+    console.log('Could not fetch activity suggestions:', error);
+    // Page will render without user suggestions
+  }
+
+  // Merge user suggestions into appropriate categories
+  const featuredActivities: CategoryGroup[] = baseFeaturedActivities.map(categoryGroup => {
+    // Find user suggestions for this category
+    const userActivitiesForCategory = userSuggestions
+      .filter(suggestion => suggestion.category === categoryGroup.category)
+      .map(suggestion => ({
+        id: suggestion.id,
+        name: suggestion.activity_name,
+        description: suggestion.description,
+        location: suggestion.location,
+        website: suggestion.website || undefined,
+        isUserSubmitted: true,
+        submittedBy: suggestion.name,
+        notes: suggestion.notes || undefined,
+        category: suggestion.category
+      }));
+
+    return {
+      ...categoryGroup,
+      activities: [...categoryGroup.activities, ...userActivitiesForCategory]
+    };
+  });
+
+  // Handle user suggestions for categories that don't exist in base categories
+  const existingCategories = baseFeaturedActivities.map(cat => cat.category);
+  const newCategories = [...new Set(
+    userSuggestions
+      .filter(suggestion => !existingCategories.includes(suggestion.category))
+      .map(suggestion => suggestion.category)
+  )];
+
+  // Add new categories for user suggestions
+  newCategories.forEach(category => {
+    const userActivitiesForCategory = userSuggestions
+      .filter(suggestion => suggestion.category === category)
+      .map(suggestion => ({
+        id: suggestion.id,
+        name: suggestion.activity_name,
+        description: suggestion.description,
+        location: suggestion.location,
+        website: suggestion.website || undefined,
+        isUserSubmitted: true,
+        submittedBy: suggestion.name,
+        notes: suggestion.notes || undefined,
+        category: suggestion.category
+      }));
+
+    const getCategoryIcon = (category: string) => {
+      const iconMap: { [key: string]: string } = {
+        "Outdoors & Nature": "🌊",
+        "Museums & History": "🏛️",
+        "Food & Drink": "🍽️",
+        "Entertainment": "🎭",
+        "Shopping": "🛍️",
+        "Day Trips": "⛵",
+        "Family-Friendly": "👨‍👩‍👧‍👦",
+        "Other": "✨"
+      };
+      return iconMap[category] || "✨";
+    };
+
+    featuredActivities.push({
+      category,
+      icon: getCategoryIcon(category),
+      activities: userActivitiesForCategory
+    });
+  });
+
+  return (
+    <ThingsToDoClient 
+      initialActivities={featuredActivities}
+      initialUserSuggestions={userSuggestions}
+    />
   );
 }
