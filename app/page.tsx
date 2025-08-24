@@ -35,8 +35,8 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative h-[70vh] w-full overflow-hidden image-hero animate-fade-in">
         <Image
-          src="/bob-whiteley.jpg"
-          alt="Bob Whiteley by the water"
+          src="/bob-whiteley-hero.jpg"
+          alt="Bob Whiteley by the water - celebrating 80 years of life"
           fill
           priority
           className="object-cover"
@@ -121,7 +121,7 @@ export default function Home() {
       </section>
 
       {/* House Gallery */}
-      <section className="container animate-fade-in mt-24">
+      <section className="container animate-fade-in">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
             A Peek at Our <span className="text-gradient">Coastal Haven</span>
