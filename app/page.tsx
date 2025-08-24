@@ -121,7 +121,7 @@ export default function Home() {
       </section>
 
       {/* House Gallery */}
-      <section className="container animate-fade-in mt-48">
+      <section className="container animate-fade-in" style={{ marginTop: '200px' }}>
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
             A Peek at Our <span className="text-gradient">Coastal Haven</span>
