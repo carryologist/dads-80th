@@ -13,7 +13,25 @@ interface ActivitySuggestion {
   created_at: string;
 }
 
-const featuredActivities = [
+interface Activity {
+  name: string;
+  description: string;
+  location: string;
+  website?: string;
+  image?: string;
+  highlights?: string[];
+  isUserSubmitted?: boolean;
+  submittedBy?: string;
+  notes?: string;
+}
+
+interface CategoryGroup {
+  category: string;
+  icon: string;
+  activities: Activity[];
+}
+
+const baseFeaturedActivities: CategoryGroup[] = [
   {
     category: "Outdoors & Nature",
     icon: "🌊",
@@ -27,8 +45,8 @@ const featuredActivities = [
         highlights: ["Historic fort", "Beach access", "Sunset views", "Free parking"]
       },
       {
-        name: "Mattapoisett Rail Trail & Ned&apos;s Point Lighthouse",
-        description: "Scenic paved trail perfect for walking, biking, or jogging. Leads to stunning views of Ned&apos;s Point Lighthouse and Buzzards Bay. Connects to Phoenix Bike Trail for longer adventures.",
+        name: "Mattapoisett Rail Trail & Ned's Point Lighthouse",
+        description: "Scenic paved trail perfect for walking, biking, or jogging. Leads to stunning views of Ned's Point Lighthouse and Buzzards Bay. Connects to Phoenix Bike Trail for longer adventures.",
         location: "Mattapoisett, MA",
         website: "https://mattapoisettrailtrail.com/",
         image: "https://www.savebuzzardsbay.org/wp-content/uploads/2016/05/places-to-go_mattapoisett-rail-trail-1-800x580.jpg",
@@ -58,15 +76,15 @@ const featuredActivities = [
     activities: [
       {
         name: "New Bedford Whaling Museum",
-        description: "World&apos;s largest museum devoted to whaling history. Features the largest ship model in the world, scrimshaw collection, and interactive exhibits. Don&apos;t miss the 3D theater experience!",
+        description: "World's largest museum devoted to whaling history. Features the largest ship model in the world, scrimshaw collection, and interactive exhibits. Don't miss the 3D theater experience!",
         location: "New Bedford, MA",
         website: "https://www.whalingmuseum.org/visit/",
         image: "https://www.whalingmuseum.org/wp-content/uploads/2019/03/exterior-shot-1024x683.jpg",
-        highlights: ["World&apos;s largest whaling museum", "3D theater", "Ship models", "Interactive exhibits"]
+        highlights: ["World's largest whaling museum", "3D theater", "Ship models", "Interactive exhibits"]
       },
       {
         name: "New Bedford Whaling National Historical Park",
-        description: "Downtown walking tours through America&apos;s whaling capital. Explore cobblestone streets, historic buildings, and learn about the city&apos;s maritime heritage.",
+        description: "Downtown walking tours through America's whaling capital. Explore cobblestone streets, historic buildings, and learn about the city's maritime heritage.",
         location: "New Bedford, MA",
         website: "https://www.nps.gov/nebe/index.htm",
         image: "https://www.nps.gov/common/uploads/structured_data/3C7B8B8B-1DD8-B71B-0B3C2B5B8B8B8B8B.jpg",
@@ -79,8 +97,8 @@ const featuredActivities = [
     icon: "⛵",
     activities: [
       {
-        name: "Martha&apos;s Vineyard Ferry",
-        description: "Take the Seastreak ferry from New Bedford to Martha&apos;s Vineyard. Skip Cape traffic and enjoy a scenic 1-hour cruise to this famous island destination.",
+        name: "Martha's Vineyard Ferry",
+        description: "Take the Seastreak ferry from New Bedford to Martha's Vineyard. Skip Cape traffic and enjoy a scenic 1-hour cruise to this famous island destination.",
         location: "Departs from New Bedford State Pier",
         website: "https://seastreak.com/ferry-routes-and-schedules/between-new-bedford-marthas-vineyard-ma/",
         image: "https://explorenewbedford.org/wp-content/uploads/seastreak-1.jpg",
@@ -102,7 +120,7 @@ const featuredActivities = [
     activities: [
       {
         name: "Nasketucket Bay Vineyard",
-        description: "Fairhaven&apos;s first vineyard and winery in a charming converted 1920&apos;s dairy barn. Enjoy wine tastings, live music, and local food in a rustic setting.",
+        description: "Fairhaven's first vineyard and winery in a charming converted 1920's dairy barn. Enjoy wine tastings, live music, and local food in a rustic setting.",
         location: "237 Nasketucket Road, Fairhaven, MA",
         website: "https://www.peacelovevino.net/",
         image: "https://static.wixstatic.com/media/11062b_8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b~mv2.jpg",
@@ -132,11 +150,11 @@ const featuredActivities = [
     activities: [
       {
         name: "Buttonwood Park Zoo",
-        description: "AZA-accredited zoo with over 200 animals from around the world. Features a children&apos;s zoo, train rides, and educational programs. Open 9am-4pm daily.",
+        description: "AZA-accredited zoo with over 200 animals from around the world. Features a children's zoo, train rides, and educational programs. Open 9am-4pm daily.",
         location: "New Bedford, MA",
         website: "https://www.bpzoo.org/visit-overview/",
         image: "https://www.bpzoo.org/wp-content/uploads/2019/03/zoo-entrance.jpg",
-        highlights: ["200+ animals", "Children&apos;s zoo", "Train rides", "Educational programs"]
+        highlights: ["200+ animals", "Children's zoo", "Train rides", "Educational programs"]
       }
     ]
   }
@@ -172,19 +190,69 @@ export default async function ThingsToDo() {
     // Page will render without user suggestions
   }
 
-  const getCategoryIcon = (category: string) => {
-    const iconMap: { [key: string]: string } = {
-      "Outdoors & Nature": "🌊",
-      "Museums & History": "🏛️",
-      "Food & Drink": "🍽️",
-      "Entertainment": "🎭",
-      "Shopping": "🛍️",
-      "Day Trips": "⛵",
-      "Family-Friendly": "👨‍👩‍👧‍👦",
-      "Other": "✨"
+  // Merge user suggestions into appropriate categories
+  const featuredActivities: CategoryGroup[] = baseFeaturedActivities.map(categoryGroup => {
+    // Find user suggestions for this category
+    const userActivitiesForCategory = userSuggestions
+      .filter(suggestion => suggestion.category === categoryGroup.category)
+      .map(suggestion => ({
+        name: suggestion.activity_name,
+        description: suggestion.description,
+        location: suggestion.location,
+        website: suggestion.website || undefined,
+        isUserSubmitted: true,
+        submittedBy: suggestion.name,
+        notes: suggestion.notes || undefined
+      }));
+
+    return {
+      ...categoryGroup,
+      activities: [...categoryGroup.activities, ...userActivitiesForCategory]
     };
-    return iconMap[category] || "✨";
-  };
+  });
+
+  // Handle user suggestions for categories that don't exist in base categories
+  const existingCategories = baseFeaturedActivities.map(cat => cat.category);
+  const newCategories = [...new Set(
+    userSuggestions
+      .filter(suggestion => !existingCategories.includes(suggestion.category))
+      .map(suggestion => suggestion.category)
+  )];
+
+  // Add new categories for user suggestions
+  newCategories.forEach(category => {
+    const userActivitiesForCategory = userSuggestions
+      .filter(suggestion => suggestion.category === category)
+      .map(suggestion => ({
+        name: suggestion.activity_name,
+        description: suggestion.description,
+        location: suggestion.location,
+        website: suggestion.website || undefined,
+        isUserSubmitted: true,
+        submittedBy: suggestion.name,
+        notes: suggestion.notes || undefined
+      }));
+
+    const getCategoryIcon = (category: string) => {
+      const iconMap: { [key: string]: string } = {
+        "Outdoors & Nature": "🌊",
+        "Museums & History": "🏛️",
+        "Food & Drink": "🍽️",
+        "Entertainment": "🎭",
+        "Shopping": "🛍️",
+        "Day Trips": "⛵",
+        "Family-Friendly": "👨‍👩‍👧‍👦",
+        "Other": "✨"
+      };
+      return iconMap[category] || "✨";
+    };
+
+    featuredActivities.push({
+      category,
+      icon: getCategoryIcon(category),
+      activities: userActivitiesForCategory
+    });
+  });
 
   return (
     <div className="container space-y-16 animate-fade-in">
@@ -212,16 +280,26 @@ export default async function ThingsToDo() {
           <div className="grid gap-8">
             {categoryGroup.activities.map((activity, activityIndex) => (
               <div 
-                key={activity.name}
-                className="card hover:scale-[1.02] transition-transform duration-300"
+                key={`${activity.name}-${activityIndex}`}
+                className={`card hover:scale-[1.02] transition-transform duration-300 ${
+                  activity.isUserSubmitted 
+                    ? 'border-2 border-blue-400 bg-gradient-to-r from-blue-50/50 to-transparent' 
+                    : ''
+                }`}
                 style={{ animationDelay: `${(categoryIndex * 2 + activityIndex) * 0.1}s` }}
               >
                 <div className="grid lg:grid-cols-[300px_1fr] gap-6">
                   {/* Activity Image */}
                   <div className="relative aspect-[4/3] lg:aspect-[3/2] image-rounded overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center">
-                      <div className="text-6xl opacity-50">{categoryGroup.icon}</div>
-                    </div>
+                    {activity.image ? (
+                      <div className="w-full h-full bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center">
+                        <div className="text-6xl opacity-50">{categoryGroup.icon}</div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center">
+                        <div className="text-6xl opacity-50">{categoryGroup.icon}</div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Activity Details */}
@@ -230,6 +308,11 @@ export default async function ThingsToDo() {
                       <h3 className="font-display text-xl font-semibold flex-1">
                         {activity.name}
                       </h3>
+                      {activity.isUserSubmitted && (
+                        <div className="badge badge-blue text-xs">
+                          Suggested by {activity.submittedBy}
+                        </div>
+                      )}
                       {activity.website && (
                         <a
                           href={activity.website}
@@ -254,7 +337,7 @@ export default async function ThingsToDo() {
                     </p>
                     
                     {activity.highlights && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 mb-3">
                         {activity.highlights.map((highlight) => (
                           <span 
                             key={highlight}
@@ -265,76 +348,11 @@ export default async function ThingsToDo() {
                         ))}
                       </div>
                     )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
-
-      {/* User Suggestions Section */}
-      {userSuggestions.length > 0 && (
-        <section>
-          <div className="text-center mb-12">
-            <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
-              💫 Family <span className="text-gradient">Suggestions</span>
-            </h2>
-            <p className="text-lg opacity-75 max-w-2xl mx-auto">
-              Great ideas shared by our family members!
-            </p>
-          </div>
-          
-          <div className="grid gap-6">
-            {userSuggestions.map((suggestion, index) => (
-              <div 
-                key={suggestion.id}
-                className="card border-2 border-[var(--brand-accent)]/30 bg-gradient-to-r from-[var(--brand-accent)]/5 to-transparent hover:scale-[1.02] transition-transform duration-300"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-3xl">
-                    {getCategoryIcon(suggestion.category)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-start gap-3 mb-2">
-                      <h3 className="font-display text-lg font-semibold flex-1">
-                        {suggestion.activity_name}
-                      </h3>
-                      <div className="badge badge-accent text-xs">
-                        Suggested by {suggestion.name}
-                      </div>
-                      {suggestion.website && (
-                        <a
-                          href={suggestion.website}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn btn-secondary text-sm"
-                        >
-                          🔗 Visit
-                        </a>
-                      )}
-                    </div>
                     
-                    <div className="badge badge-primary text-xs mb-3">
-                      {suggestion.category}
-                    </div>
-                    
-                    {suggestion.location && (
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg">📍</span>
-                        <p className="text-sm opacity-75">{suggestion.location}</p>
-                      </div>
-                    )}
-                    
-                    <p className="text-sm opacity-80 mb-3 leading-relaxed">
-                      {suggestion.description}
-                    </p>
-                    
-                    {suggestion.notes && (
+                    {activity.notes && (
                       <div className="mt-3 p-3 bg-[var(--surface-secondary)] rounded-lg">
                         <p className="text-sm opacity-80">
-                          💭 {suggestion.notes}
+                          💭 {activity.notes}
                         </p>
                       </div>
                     )}
@@ -344,7 +362,7 @@ export default async function ThingsToDo() {
             ))}
           </div>
         </section>
-      )}
+      ))}
 
       {/* Activity Suggestion Form */}
       <section className="max-w-2xl mx-auto">
