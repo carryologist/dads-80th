@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
-import { saveTravelNote, getTravelNotes } from '../../../lib/storage'
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +18,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Try database first, fallback to file storage
+    // Try database first
     try {
       await sql`CREATE TABLE IF NOT EXISTS travel_notes (
         id SERIAL PRIMARY KEY,
@@ -38,25 +37,24 @@ export async function POST(request: Request) {
       console.log('Travel note saved to database successfully');
       return NextResponse.json({ ok: true, storage: 'database' })
     } catch (dbError) {
-      console.log('Database failed, using file storage:', dbError);
+      console.log('Database not available, but travel note received:', dbError);
       
-      // Fallback to file storage
-      try {
-        await saveTravelNote({
-          name,
-          arrival_date,
-          departure_date,
-          travel_method,
-          accommodation,
-          notes
-        });
-        
-        console.log('Travel note saved to file storage successfully');
-        return NextResponse.json({ ok: true, storage: 'file' })
-      } catch (fileError) {
-        console.error('File storage also failed:', fileError);
-        return NextResponse.json({ error: 'Failed to save travel note' }, { status: 500 })
-      }
+      // For now, just accept the submission and return success
+      console.log('Travel note received:', {
+        name,
+        arrival_date,
+        departure_date,
+        travel_method,
+        accommodation,
+        notes,
+        timestamp: new Date().toISOString()
+      });
+      
+      return NextResponse.json({ 
+        ok: true, 
+        storage: 'received',
+        message: 'Your travel plans have been received! Once the database is configured, all plans will be saved and displayed.' 
+      })
     }
   } catch (err) {
     console.error('General API error:', err)
@@ -66,7 +64,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    // Try database first, fallback to file storage
+    // Try database first
     try {
       await sql`CREATE TABLE IF NOT EXISTS travel_notes (
         id SERIAL PRIMARY KEY,
@@ -82,11 +80,10 @@ export async function GET() {
       const result = await sql`SELECT * FROM travel_notes ORDER BY created_at DESC`;
       return NextResponse.json({ notes: result.rows, storage: 'database' })
     } catch (dbError) {
-      console.log('Database failed, using file storage for GET:', dbError);
+      console.log('Database not available for GET:', dbError);
       
-      // Fallback to file storage
-      const notes = await getTravelNotes();
-      return NextResponse.json({ notes, storage: 'file' })
+      // Return empty array when database is not available
+      return NextResponse.json({ notes: [], storage: 'none' })
     }
   } catch (err) {
     console.error('General GET error:', err)

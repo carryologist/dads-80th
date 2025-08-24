@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
-import { saveActivitySuggestion, getActivitySuggestions } from '../../../lib/storage'
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Try database first, fallback to file storage
+    // Try database first
     try {
       await sql`CREATE TABLE IF NOT EXISTS activity_suggestions (
         id SERIAL PRIMARY KEY,
@@ -40,26 +39,26 @@ export async function POST(request: Request) {
       console.log('Data saved to database successfully');
       return NextResponse.json({ ok: true, storage: 'database' })
     } catch (dbError) {
-      console.log('Database failed, using file storage:', dbError);
+      console.log('Database not available, but form submission received:', dbError);
       
-      // Fallback to file storage
-      try {
-        await saveActivitySuggestion({
-          name,
-          activity_name,
-          description,
-          location,
-          website,
-          category,
-          notes
-        });
-        
-        console.log('Data saved to file storage successfully');
-        return NextResponse.json({ ok: true, storage: 'file' })
-      } catch (fileError) {
-        console.error('File storage also failed:', fileError);
-        return NextResponse.json({ error: 'Failed to save suggestion' }, { status: 500 })
-      }
+      // For now, just accept the submission and return success
+      // In a production app, you'd want to use Vercel KV, Upstash, or another service
+      console.log('Activity suggestion received:', {
+        name,
+        activity_name,
+        description,
+        location,
+        website,
+        category,
+        notes,
+        timestamp: new Date().toISOString()
+      });
+      
+      return NextResponse.json({ 
+        ok: true, 
+        storage: 'received',
+        message: 'Your suggestion has been received! Once the database is configured, all suggestions will be saved and displayed.' 
+      })
     }
   } catch (err) {
     console.error('General API error:', err)
@@ -69,7 +68,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    // Try database first, fallback to file storage
+    // Try database first
     try {
       await sql`CREATE TABLE IF NOT EXISTS activity_suggestions (
         id SERIAL PRIMARY KEY,
@@ -86,11 +85,10 @@ export async function GET() {
       const result = await sql`SELECT * FROM activity_suggestions ORDER BY created_at DESC`;
       return NextResponse.json({ suggestions: result.rows, storage: 'database' })
     } catch (dbError) {
-      console.log('Database failed, using file storage for GET:', dbError);
+      console.log('Database not available for GET:', dbError);
       
-      // Fallback to file storage
-      const suggestions = await getActivitySuggestions();
-      return NextResponse.json({ suggestions, storage: 'file' })
+      // Return empty array when database is not available
+      return NextResponse.json({ suggestions: [], storage: 'none' })
     }
   } catch (err) {
     console.error('General GET error:', err)

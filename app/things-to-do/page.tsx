@@ -1,5 +1,16 @@
-import { getActivitySuggestions, ActivitySuggestion } from "../../lib/storage";
 import ActivitySuggestionForm from "../../components/ActivitySuggestionForm";
+
+interface ActivitySuggestion {
+  id: string;
+  name: string;
+  activity_name: string;
+  description: string;
+  location: string;
+  website: string;
+  category: string;
+  notes: string;
+  created_at: string;
+}
 
 const featuredActivities = [
   {
@@ -134,9 +145,15 @@ export default async function ThingsToDo() {
   let userSuggestions: ActivitySuggestion[] = [];
 
   try {
-    userSuggestions = await getActivitySuggestions();
+    const response = await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/activity-suggestions`, {
+      cache: 'no-store'
+    });
+    if (response.ok) {
+      const data = await response.json();
+      userSuggestions = data.suggestions || [];
+    }
   } catch (_e) {
-    // Ignore errors so the page still renders if storage is not available yet.
+    // Ignore errors so the page still renders if API is not available yet.
   }
 
   const getCategoryIcon = (category: string) => {

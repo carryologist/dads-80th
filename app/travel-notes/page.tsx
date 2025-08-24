@@ -1,13 +1,29 @@
-import { getTravelNotes, TravelNote } from "../../lib/storage";
 import TravelPlanForm from "../../components/TravelPlanForm";
+
+interface TravelNote {
+  id: string;
+  name: string;
+  arrival_date: string;
+  departure_date: string;
+  travel_method: string;
+  accommodation: string;
+  notes: string;
+  created_at: string;
+}
 
 export default async function TravelNotes() {
   let travelNotes: TravelNote[] = [];
 
   try {
-    travelNotes = await getTravelNotes();
+    const response = await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/travel-notes`, {
+      cache: 'no-store'
+    });
+    if (response.ok) {
+      const data = await response.json();
+      travelNotes = data.notes || [];
+    }
   } catch (_e) {
-    // Ignore errors so the page still renders if storage is not available yet.
+    // Ignore errors so the page still renders if API is not available yet.
   }
 
   const formatDate = (dateString: string) => {
