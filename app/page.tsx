@@ -79,14 +79,14 @@ export default function Home() {
       {/* Planning Cards */}
       <section className="container animate-fade-in">
         <div className="text-center mb-12">
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4 text-gradient">
-            Plan Your Perfect Week
+          <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
+            Plan Your <span className="text-gradient">Perfect Week</span>
           </h2>
           <p className="text-lg opacity-75 max-w-2xl mx-auto">
             Everything you need to make the most of our coastal celebration
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="card card-travel hover:scale-105 transition-transform duration-300">
             <div className="text-3xl mb-4">🏡</div>
             <h3 className="font-display text-xl font-semibold mb-2">Stay Info</h3>
@@ -105,6 +105,16 @@ export default function Home() {
             </p>
             <Link href="/things-to-do" className="btn btn-primary w-full">
               Explore Activities →
+            </Link>
+          </div>
+          <div className="card card-travel hover:scale-105 transition-transform duration-300">
+            <div className="text-3xl mb-4">📅</div>
+            <h3 className="font-display text-xl font-semibold mb-2">Itinerary</h3>
+            <p className="text-sm opacity-75 mb-4">
+              Plan our week together with an interactive schedule builder for the perfect celebration.
+            </p>
+            <Link href="/itinerary" className="btn btn-primary w-full">
+              Plan Schedule →
             </Link>
           </div>
           <div className="card card-travel hover:scale-105 transition-transform duration-300">

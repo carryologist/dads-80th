@@ -82,8 +82,47 @@ function ActivityCard({
       <div className="grid lg:grid-cols-[300px_1fr] gap-6">
         {/* Activity Image */}
         <div className="relative aspect-[4/3] lg:aspect-[3/2] image-rounded overflow-hidden">
-          <div className="w-full h-full bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center">
-            <div className="text-6xl opacity-50">{categoryIcon}</div>
+          {activity.image ? (
+            <img 
+              src={activity.image} 
+              alt={activity.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to gradient if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <div className={`w-full h-full flex items-center justify-center ${
+            activity.image ? 'hidden' : ''
+          } ${
+            // Create different gradients based on activity name hash
+            (() => {
+              const hash = activity.name.split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+              }, 0);
+              const gradients = [
+                'bg-gradient-to-br from-blue-400 to-blue-600',
+                'bg-gradient-to-br from-green-400 to-green-600', 
+                'bg-gradient-to-br from-purple-400 to-purple-600',
+                'bg-gradient-to-br from-orange-400 to-orange-600',
+                'bg-gradient-to-br from-teal-400 to-teal-600',
+                'bg-gradient-to-br from-pink-400 to-pink-600',
+                'bg-gradient-to-br from-indigo-400 to-indigo-600',
+                'bg-gradient-to-br from-red-400 to-red-600'
+              ];
+              return gradients[Math.abs(hash) % gradients.length];
+            })()
+          }`}>
+            <div className="text-center">
+              <div className="text-4xl mb-2">{categoryIcon}</div>
+              <div className="text-white text-sm font-medium opacity-90 px-2">
+                {activity.location.split(',')[0]}
+              </div>
+            </div>
           </div>
         </div>
         
@@ -364,8 +403,8 @@ export default function ThingsToDoClient({
             <a href="/travel-notes" className="btn btn-primary">
               ✈️ Share Travel Plans
             </a>
-            <a href="/stay" className="btn btn-secondary">
-              🏡 View House Details
+            <a href="/itinerary" className="btn btn-secondary">
+              📅 Plan Our Schedule
             </a>
           </div>
         </div>

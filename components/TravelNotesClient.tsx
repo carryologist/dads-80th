@@ -322,8 +322,8 @@ export default function TravelNotesClient({
             <a href="/things-to-do" className="btn btn-primary">
               🌊 Explore Activities
             </a>
-            <a href="/stay" className="btn btn-secondary">
-              🏡 View House Details
+            <a href="/itinerary" className="btn btn-secondary">
+              📅 Plan Our Schedule
             </a>
           </div>
         </div>

@@ -127,7 +127,7 @@ export default function RootLayout({
             </div>
             <div className="border-t border-[var(--border-light)] mt-8 pt-8 text-center">
               <p className="text-xs opacity-60">
-                Made with ❤️ for Dad&apos;s 80th • Hosted on Vercel
+                Made with ❤️ for Dad&apos;s 80th • Imagined by Rob. Built with Blink. Hosted on Vercel.
               </p>
             </div>
           </div>

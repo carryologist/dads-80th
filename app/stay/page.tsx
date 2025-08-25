@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 const vrboImages = [
   "https://media.vrbo.com/lodging/118000000/117070000/117064100/117064047/6b649ff4.jpg?impolicy=resizecrop&rw=1200&ra=fit",
@@ -27,7 +28,7 @@ export default function StayInfo() {
           <h2 className="font-display text-2xl font-semibold mb-4">Trip Dates</h2>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🛋</span>
+              <span className="text-2xl">🛌</span>
               <div>
                 <p className="font-medium">Check-in: July 5, 2026</p>
                 <p className="text-sm opacity-75">Saturday afternoon</p>
@@ -38,6 +39,15 @@ export default function StayInfo() {
               <div>
                 <p className="font-medium">Check-out: July 12, 2026</p>
                 <p className="text-sm opacity-75">Saturday morning</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📅</span>
+              <div>
+                <Link href="/itinerary" className="font-medium hover:text-[var(--brand-primary)] transition-colors">
+                  Interactive Schedule
+                </Link>
+                <p className="text-sm opacity-75">Plan our week together</p>
               </div>
             </div>
             <div className="mt-4 p-3 bg-[var(--brand-primary)]/10 rounded-lg">
