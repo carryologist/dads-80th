@@ -53,6 +53,13 @@ export default function StayInfo() {
           <h2 className="font-display text-2xl font-semibold mb-4">Location</h2>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
+              <span className="text-xl mt-1">🏠</span>
+              <div>
+                <p className="font-medium text-lg">4 Brook Dr, Mattapoisett, MA</p>
+                <p className="text-sm opacity-75">02739, United States</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
               <span className="text-xl mt-1">🏖️</span>
               <div>
                 <p className="font-medium">Fairhaven & Mattapoisett</p>
@@ -66,9 +73,9 @@ export default function StayInfo() {
                 <p className="text-sm opacity-75">Direct water access</p>
               </div>
             </div>
-            <div className="mt-4 p-3 bg-[var(--brand-accent)]/10 rounded-lg">
-              <p className="text-sm font-medium text-[var(--brand-accent)]">
-                🗺️ Exact address will be shared closer to the trip
+            <div className="mt-4 p-3 bg-[var(--brand-primary)]/10 rounded-lg">
+              <p className="text-sm font-medium text-[var(--brand-primary)]">
+                🗺️ Perfect location for coastal adventures and family gatherings
               </p>
             </div>
           </div>
@@ -103,6 +110,48 @@ export default function StayInfo() {
               fill
               className="object-cover"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Location Map */}
+      <section className="card card-travel p-8">
+        <div className="grid lg:grid-cols-[1fr_400px] gap-8 items-center">
+          <div>
+            <div className="badge badge-primary mb-4">🗺️ Interactive Map</div>
+            <h2 className="font-display text-3xl font-semibold mb-4">
+              Find Our <span className="text-gradient">Location</span>
+            </h2>
+            <p className="text-lg opacity-80 mb-6">
+              Explore the neighborhood and plan your coastal adventures. Our waterfront home 
+              is perfectly positioned for easy access to beaches, restaurants, and local attractions.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🏖️</span>
+                <span className="text-sm">Walking distance to beaches</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🍽️</span>
+                <span className="text-sm">Close to local restaurants</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🚗</span>
+                <span className="text-sm">Easy parking and access</span>
+              </div>
+            </div>
+          </div>
+          <div className="relative w-full h-[350px] rounded-lg overflow-hidden shadow-lg">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2968.5!2d-70.8123!3d41.6543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e4c0a1b2c3d4e5%3A0x1234567890abcdef!2s4%20Brook%20Dr%2C%20Mattapoisett%2C%20MA%2002739!5e0!3m2!1sen!2sus!4v1640000000000!5m2!1sen!2sus"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="4 Brook Dr, Mattapoisett, MA - Exact Location"
+            ></iframe>
           </div>
         </div>
       </section>

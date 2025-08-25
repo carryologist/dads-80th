@@ -54,6 +54,9 @@
     --surface-secondary: #334155;
     --border: #475569;
     --border-light: #64748b;
+    
+    /* Dark mode card gradient */
+    --gradient-card: linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(51, 65, 85, 0.9) 100%);
   }
 }
 
@@ -126,6 +129,28 @@ body {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: var(--shadow-travel);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+  }
+  
+  .card-travel {
+    background: var(--gradient-card);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    color: var(--foreground);
+  }
+  
+  .card-travel .opacity-75 {
+    opacity: 0.8;
+  }
+  
+  .card-travel .opacity-80 {
+    opacity: 0.9;
+  }
 }
 
 /* Button Components */
