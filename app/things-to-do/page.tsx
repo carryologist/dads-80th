@@ -142,7 +142,7 @@ const baseFeaturedActivities: CategoryGroup[] = [
         description: "Waterfront dining in New Bedford with fresh seafood and craft cocktails. Great views of the harbor and excellent for special dinners.",
         location: "New Bedford Waterfront",
         website: "https://www.theblackwhale.com/",
-        image: "https://www.theblackwhale.com/wp-content/uploads/2019/08/black-whale-exterior-1024x683.jpg",
+        image: "https://images.getbento.com/accounts/fbf1294b920e464816fd7acf98c10c15/media/images/41127TBW_201021_shrimp_scallops_carbona-9103.jpg",
         highlights: ["Waterfront dining", "Fresh seafood", "Craft cocktails", "Harbor views"]
       },
       {

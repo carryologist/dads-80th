@@ -400,7 +400,7 @@ export default function ThingsToDoClient({
             is going to be unforgettable! Don&apos;t forget to coordinate your travel plans.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <a href="/travel-notes" className="btn btn-primary">
+            <a href="/travel-notes" className="btn btn-accent">
               ✈️ Share Travel Plans
             </a>
             <a href="/itinerary" className="btn btn-secondary">
