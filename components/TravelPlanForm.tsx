@@ -252,7 +252,7 @@ export default function TravelPlanForm() {
         <button 
           type="submit" 
           disabled={isSubmitting}
-          className="w-full btn btn-primary py-3 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full btn btn-accent py-3 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <>

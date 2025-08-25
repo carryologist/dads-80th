@@ -319,7 +319,7 @@ export default function TravelNotesClient({
             celebration is perfectly timed for maximum family fun!
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <a href="/things-to-do" className="btn btn-primary">
+            <a href="/things-to-do" className="btn btn-accent">
               🌊 Explore Activities
             </a>
             <a href="/itinerary" className="btn btn-secondary">

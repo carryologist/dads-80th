@@ -243,7 +243,7 @@ export default function StayInfo() {
             href="https://www.vrbo.com/4622953?uni_link=5197121"
             target="_blank"
             rel="noreferrer"
-            className="btn btn-primary"
+            className="btn btn-accent"
           >
             🔍 View VRBO for More Photos
           </a>

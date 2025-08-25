@@ -285,7 +285,7 @@ export default function ActivitySuggestionForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="btn btn-primary w-full"
+          className="btn btn-accent w-full"
         >
           {isSubmitting ? (
             <>
