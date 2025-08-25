@@ -142,11 +142,15 @@ export default function Home() {
               <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-4">
                 Our <span className="text-gradient">Home Base</span>
               </h2>
-              <p className="text-lg opacity-80 mb-6 leading-relaxed">
-                Experience waterfront vibes, cozy rooms, and quick access to pristine beaches, 
-                scenic bike paths, and historic lighthouses. We&apos;ll share the complete address 
-                and house details in the Stay Info section.
-              </p>
+              <div className="mb-6">
+                <div className="badge badge-accent mb-3">📍 Exact Address</div>
+                <p className="text-xl font-semibold mb-2">4 Brook Dr, Mattapoisett, MA</p>
+                <p className="text-lg opacity-80 leading-relaxed">
+                  Experience waterfront vibes, cozy rooms, and quick access to pristine beaches, 
+                  scenic bike paths, and historic lighthouses. This beautiful property offers 
+                  the perfect setting for our coastal celebration.
+                </p>
+              </div>
               <div className="flex flex-wrap gap-4">
                 <a
                   href="https://www.vrbo.com/4622953?uni_link=5197121"
@@ -161,13 +165,17 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            <div className="relative w-full h-[300px] lg:h-[350px] image-rounded hover:scale-105 transition-transform duration-300">
-              <Image
-                src={vrboImages[0]}
-                alt="Beautiful waterfront house exterior"
-                fill
-                className="object-cover"
-              />
+            <div className="relative w-full h-[300px] lg:h-[350px] rounded-lg overflow-hidden shadow-lg">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2968.5!2d-70.8123!3d41.6543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDHCsDM5JzE1LjUiTiA3MMKwNDgnNDQuMyJX!5e0!3m2!1sen!2sus!4v1640000000000!5m2!1sen!2sus&q=4+Brook+Dr,+Mattapoisett,+MA+02739"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="4 Brook Dr, Mattapoisett, MA - Our Home Base Location"
+              ></iframe>
             </div>
           </div>
         </div>
