@@ -47,6 +47,9 @@ export default function RootLayout({
               <Link href="/things-to-do" className="text-sm font-medium hover:text-[var(--brand-primary)] transition-colors">
                 🌊 Things to Do
               </Link>
+              <Link href="/itinerary" className="text-sm font-medium hover:text-[var(--brand-primary)] transition-colors">
+                📅 Itinerary
+              </Link>
               <Link href="/travel-notes" className="text-sm font-medium hover:text-[var(--brand-primary)] transition-colors">
                 📝 Travel Notes
               </Link>
@@ -92,6 +95,9 @@ export default function RootLayout({
                   </Link>
                   <Link href="/things-to-do" className="block text-sm hover:text-[var(--brand-primary)] transition-colors">
                     🌊 Activities & Attractions
+                  </Link>
+                  <Link href="/itinerary" className="block text-sm hover:text-[var(--brand-primary)] transition-colors">
+                    📅 Interactive Schedule
                   </Link>
                   <Link href="/travel-notes" className="block text-sm hover:text-[var(--brand-primary)] transition-colors">
                     📝 Share Travel Plans

@@ -36,3 +36,20 @@ model TravelNote {
 
   @@map("travel_notes")
 }
+
+model ItineraryEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime @map("start_time")
+  endTime     DateTime @map("end_time")
+  location    String?
+  url         String?
+  category    String   @default("general")
+  color       String   @default("#0ea5e9")
+  createdBy   String?  @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("itinerary_events")
+}
